@@ -16,7 +16,7 @@ import {
   type PlantSensorReadings,
 } from "../src/lib/plant/sensors";
 
-const plantAnalysisModel = "gpt-5.4";
+export const plantAnalysisModel = "gpt-5.4";
 const observerReasoningSummaryMode = "auto";
 const observerReasoningEffortMode = "medium";
 
@@ -28,7 +28,7 @@ const MAX_IMAGE_DATA_URL_LENGTH = 11 * 1024 * 1024; // ~8 MB of image data once 
 // (which blocks every later observation until the server restarts).
 const MODEL_CALL_TIMEOUT_MS = 120_000;
 
-const localModelLabel = `${LOCAL_VISION_MODEL} (local)`;
+export const localModelLabel = `${LOCAL_VISION_MODEL} (local)`;
 
 // POST /api/analyze
 
@@ -370,7 +370,7 @@ async function streamObserverReasoning({
 
 // Abort a non-streaming model call when the browser disconnects OR a hard time
 // ceiling is hit, so a stalled request can't hang on the SDK's long default.
-function abortOnDisconnectOrTimeout(res: Response) {
+export function abortOnDisconnectOrTimeout(res: Response) {
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(new Error(`Model call exceeded ${MODEL_CALL_TIMEOUT_MS}ms`)),
@@ -385,7 +385,7 @@ function abortOnDisconnectOrTimeout(res: Response) {
 }
 
 // Local calls have their own (longer) timeout; only stop on disconnect.
-function abortOnDisconnect(res: Response) {
+export function abortOnDisconnect(res: Response) {
   const controller = new AbortController();
   res.on("close", () => {
     if (!res.writableEnded) controller.abort();
@@ -393,7 +393,7 @@ function abortOnDisconnect(res: Response) {
   return controller.signal;
 }
 
-function validateImageDataUrl(value: unknown, res: Response): string | null {
+export function validateImageDataUrl(value: unknown, res: Response): string | null {
   if (typeof value !== "string" || !value.startsWith("data:image/")) {
     res.status(400).json({ error: "A plant image is required (as a data URL)." });
     return null;
@@ -407,7 +407,7 @@ function validateImageDataUrl(value: unknown, res: Response): string | null {
   return value;
 }
 
-function readBoundedString(value: unknown, maxLength: number) {
+export function readBoundedString(value: unknown, maxLength: number) {
   if (typeof value !== "string" || !value.trim()) return null;
   return value.slice(0, maxLength);
 }

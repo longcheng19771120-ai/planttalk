@@ -1,5 +1,5 @@
 import { PLANT_SENSOR_LIMITS, type PlantSensorKey, type PlantSensorReadings } from "@/lib/plant/sensors";
-import type { PlantAttributeAnalysis, PlantObserverResponse } from "@/lib/plant/schemas";
+import type { PlantAttributeAnalysis, PlantHealthDiagnosis, PlantObserverResponse } from "@/lib/plant/schemas";
 
 // Client-side helpers for the two API endpoints. Images are sent as base64
 // data URLs inside JSON bodies — simple to read on both ends, and the server
@@ -7,6 +7,11 @@ import type { PlantAttributeAnalysis, PlantObserverResponse } from "@/lib/plant/
 
 export interface PlantAnalysisResponse {
   analysis: PlantAttributeAnalysis;
+  model: string;
+}
+
+export interface PlantDiagnosisResponse {
+  diagnosis: PlantHealthDiagnosis;
   model: string;
 }
 
@@ -79,6 +84,18 @@ export async function analyzePlantImageFile(imageFile: File): Promise<PlantAnaly
 
   const data = await readJsonResponse<PlantAnalysisResponse>(response, "植物分析失败");
   return data;
+}
+
+export async function diagnosePlantImageFile(imageFile: File, context: string): Promise<PlantDiagnosisResponse> {
+  assertImageFileSize(imageFile);
+
+  const response = await fetch("/api/diagnose", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: await fileToDataUrl(imageFile), context }),
+  });
+
+  return readJsonResponse<PlantDiagnosisResponse>(response, "植物健康诊断失败");
 }
 
 // The simple, non-streaming way to run one observation — kept as the readable

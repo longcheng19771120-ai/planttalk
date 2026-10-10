@@ -7,6 +7,11 @@
 // structure out of them.
 
 import { describeLightReading } from "@/lib/plant/sensors";
+import { CARE_ACTIONS, computeCareStatus } from "@/lib/plant/care";
+import { findCondition } from "@/lib/plant/health";
+import { usePlantCareStore } from "@/stores/plant/care-store";
+import { selectLatestDiagnosis, usePlantHealthStore } from "@/stores/plant/health-store";
+import { computeSensorRisks } from "@/stores/plant/plant-context";
 import {
   selectHasFreshHardwareReadings,
   selectSensorReadings,
@@ -52,6 +57,47 @@ export async function executePlantTool(name: string, argsJson: string): Promise<
       const selected = selectObservationsForPrompt(state);
       return JSON.stringify({
         summary: summarizeObservationHistory(selected, state.observations),
+      });
+    }
+
+    case "get_care_and_health": {
+      const { tasks, log, profile, snoozes } = usePlantCareStore.getState();
+      const now = Date.now();
+      const schedule = CARE_ACTIONS.filter((action) => tasks[action].enabled).map((action) => {
+        const status = computeCareStatus(action, tasks[action], log, profile, snoozes[action], now);
+        return {
+          task: action,
+          lastDoneDaysAgo: status.lastDoneAt === null ? null : Math.floor((now - status.lastDoneAt) / 86_400_000),
+          dueInDays: status.daysUntilDue,
+          state: status.state,
+        };
+      });
+
+      const latest = selectLatestDiagnosis(usePlantHealthStore.getState());
+      const healthCheck = latest
+        ? {
+            checkedHoursAgo: Math.round((now - latest.recordedAt) / 3_600_000),
+            overallHealth: latest.diagnosis.overallHealth,
+            score: latest.diagnosis.healthScore,
+            summary: latest.diagnosis.summary,
+            issues: latest.diagnosis.issues.map((issue, index) => ({
+              name: issue.name,
+              confidence: issue.confidence,
+              severity: issue.severity,
+              treatment: issue.treatment,
+              treated: latest.treatedIssues.includes(index),
+            })),
+          }
+        : "No photo health check yet.";
+
+      return JSON.stringify({
+        schedule,
+        healthCheck,
+        sensorRisks: computeSensorRisks(now).map((risk) => ({
+          problem: findCondition(risk.conditionId)?.name ?? risk.conditionId,
+          level: risk.level,
+          reason: risk.reason,
+        })),
       });
     }
 

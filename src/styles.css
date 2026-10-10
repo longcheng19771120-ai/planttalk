@@ -23,8 +23,8 @@ textarea {
 }
 
 /* Dashboard panels sit in a responsive grid. Column count steps up with width:
-   1 (phone) → 2 (tablet) → 3 (laptop) → 4 (desktop/kiosk). With eight equal
-   panels the widest step tiles into a clean 4×2 layout that fills the screen. */
+   1 (phone) → 2 (tablet) → 3 (laptop) → 4 (desktop/kiosk). At the widest step
+   the action panels fill the first row and health, care and memory the second. */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -100,4 +100,93 @@ img {
   display: block;
   width: 100%;
   height: 28px;
+}
+
+/* Care schedule. */
+.care-state {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border-radius: var(--pico-border-radius);
+  font-size: 0.8rem;
+}
+
+.care-state-overdue {
+  background: #d9363e;
+  color: #fff;
+}
+
+.care-state-due {
+  background: #e8890c;
+  color: #fff;
+}
+
+.care-state-soon {
+  background: #f4d35e;
+  color: #222;
+}
+
+.care-state-ok {
+  background: #3a9d5d;
+  color: #fff;
+}
+
+.care-state-never {
+  border: 1px solid var(--pico-muted-border-color);
+}
+
+.care-list {
+  padding: 0;
+}
+
+.care-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.care-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.care-actions button,
+.health-treat {
+  padding: 0.2rem 0.6rem;
+  margin: 0 0 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.care-setting {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.care-setting input[type="number"] {
+  width: 5rem;
+  margin: 0 0.4rem;
+}
+
+/* Health check. */
+.health-thumb {
+  float: right;
+  width: 5rem;
+  margin: 0 0 0.5rem 0.5rem;
+}
+
+.health-result {
+  overflow: hidden;
+}
+
+.health-issues li {
+  margin-bottom: 0.6rem;
+}
+
+.pest-library {
+  max-height: 26rem;
+  overflow-y: auto;
 }

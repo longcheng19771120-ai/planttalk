@@ -20,6 +20,7 @@ import {
   LOCAL_VISION_MODEL,
   getAiProvider,
 } from "./ai-config";
+import { handleDiagnoseRequest } from "./diagnose";
 import { handleLocalChatRequest, handleLocalTranscribeRequest } from "./local";
 import { handleAnalyzeRequest, handleObserveRequest } from "./observe";
 import { isApiKeyConfigured } from "./openai";
@@ -42,6 +43,10 @@ app.post("/api/analyze", handleAnalyzeRequest);
 // POST /api/observe — camera frame + sensor readings + history → structured
 // observation. Optionally streams the model's reasoning summaries as NDJSON.
 app.post("/api/observe", handleObserveRequest);
+
+// POST /api/diagnose — plant photo + sensor and care context → structured
+// health check for pests, diseases, and care problems.
+app.post("/api/diagnose", handleDiagnoseRequest);
 
 // GET /api/config — tells the browser which voice pipeline to use.
 app.get("/api/config", (_req, res) => {

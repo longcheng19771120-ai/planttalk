@@ -7,6 +7,9 @@ import { VoiceConversationPanel } from "@/components/dashboard/voice-conversatio
 import { DebugPanel } from "@/components/dashboard/debug-panel";
 import { PlantUploadPanel } from "@/components/dashboard/plant-upload-panel";
 import { PlantAnalysisPanel } from "@/components/dashboard/plant-analysis-panel";
+import { CarePanel } from "@/components/dashboard/care-panel";
+import { HealthPanel } from "@/components/dashboard/health-panel";
+import { PestLibraryPanel } from "@/components/dashboard/pest-library-panel";
 import { captureLiveFrame, usePlantCameraStore } from "@/stores/plant/camera-store";
 import { useObservationLoopStore } from "@/stores/plant/observation-loop-store";
 import { usePlantSensorsStore } from "@/stores/plant/sensors-store";
@@ -65,8 +68,12 @@ export function PlantDashboard() {
       <SensorsPanel />
       <ObservationPanel />
       <VoiceConversationPanel />
-      {/* Row 2: outputs and the standalone image tester. */}
+      {/* Row 2: the plant's health, care and memory. */}
+      <HealthPanel />
+      <CarePanel />
       <HistoryPanel />
+      <PestLibraryPanel />
+      {/* Row 3: debugging and the standalone image tester. */}
       <DebugPanel />
       <PlantUploadPanel />
       <PlantAnalysisPanel />

@@ -126,6 +126,32 @@ For most users, you'll want to leave the system in Ambient Mode when in use.
 - **Talk to plant:** starts the Realtime voice conversation.
 - **Open ambient mode:** switches to a full-screen conversation view.
 
+### Health and care (植物健康与养护)
+
+- **植物健康 · 病虫害:** click **用摄像头诊断** or upload a close-up of a leaf,
+  stem, or the soil. The vision model returns an overall health score and
+  likely pests, diseases, or care problems, each with its evidence,
+  confidence, and a gentle first treatment. Sensor history is checked for
+  risks such as soil that has stayed soggy for two days (root rot) or very dry
+  soil, without any model call. A photo check is a hint, not a diagnosis.
+- **养护计划:** watering, fertilizing, misting, leaf cleaning, and repotting,
+  each with a "last done / next due" status and a **完成** button. Watering
+  uses a hydration estimate that drains faster in heat and summer and slower
+  in winter. With a live Arduino, a sudden jump in soil moisture is logged as
+  a watering automatically.
+- **病虫害图鉴:** an offline, searchable guide to 17 common houseplant pests,
+  diseases, and care problems.
+- The plant can talk about all of this: ask it when it was last watered or
+  whether it has bugs.
+
+These features borrow ideas from three MIT-licensed projects, reimplemented
+for this app: [HortusFox](https://github.com/danielbrendel/hortusfox-web)
+(care dates, health state, care log),
+[ha-planta](https://github.com/natekspencer/ha-planta) (per-task last/next
+schedule with one-click completion), and
+[kiri](https://github.com/freislot/kiri) (season- and temperature-adjusted
+hydration model, postponing a task).
+
 ## Remix It
 
 Once the basics are working, you've got a small programmable plant interface.
