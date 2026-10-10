@@ -49,12 +49,55 @@ if (!existsSync(envPath)) {
 }
 
 const envContents = readFileSync(envPath, "utf8");
+const provider = readEnvValue(envContents, "AI_PROVIDER").toLowerCase() === "openai" ? "openai" : "local";
 
-if (hasConfiguredApiKey(envContents)) {
-  console.log("OpenAI API access appears configured. The key was not printed.");
+if (provider === "openai") {
+  if (hasConfiguredApiKey(envContents)) {
+    console.log("OpenAI API access appears configured. The key was not printed.");
+  } else {
+    console.log("OpenAI API access still needs to be added.");
+    console.log("If you do not have a key yet, sign in at https://platform.openai.com/api-keys.");
+    console.log(`Open ${envPath} and replace replace-me with your OpenAI API key.`);
+    console.log("Do not paste the key into chat.");
+  }
 } else {
-  console.log("OpenAI API access still needs to be added.");
-  console.log("If you do not have a key yet, sign in at https://platform.openai.com/api-keys.");
-  console.log(`Open ${envPath} and replace replace-me with your OpenAI API key.`);
-  console.log("Do not paste the key into chat.");
+  await checkLocalModels(envContents);
+}
+
+function readEnvValue(contents, name) {
+  const match = contents.match(new RegExp(`^${name}=(.*)$`, "m"));
+  return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
+}
+
+// Local mode: confirm the model server answers and the models are pulled.
+async function checkLocalModels(contents) {
+  const baseUrl = (readEnvValue(contents, "LOCAL_LLM_BASE_URL") || "http://127.0.0.1:11434/v1").replace(/\/$/, "");
+  const visionModel = readEnvValue(contents, "LOCAL_VISION_MODEL") || "qwen3.8";
+  const chatModel = readEnvValue(contents, "LOCAL_CHAT_MODEL") || visionModel;
+  console.log(`AI provider: local models at ${baseUrl}`);
+
+  let modelIds;
+  try {
+    const response = await fetch(`${baseUrl}/models`, { signal: AbortSignal.timeout(3000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    modelIds = Array.isArray(data?.data) ? data.data.map((model) => String(model.id)) : [];
+  } catch {
+    console.log("The local model server is not reachable yet.");
+    console.log("Install Ollama from https://ollama.com, make sure it is running, then run:");
+    console.log(`  ollama pull ${visionModel}`);
+    console.log("Then run `npm run setup` again.");
+    return;
+  }
+
+  console.log("The local model server is running.");
+  const matches = (wanted) =>
+    modelIds.some((id) => id === wanted || id === `${wanted}:latest` || `${id}:latest` === wanted);
+  for (const model of new Set([visionModel, chatModel])) {
+    if (matches(model)) {
+      console.log(`Model ${model} is available.`);
+    } else {
+      console.log(`Model ${model} is not downloaded yet. Run: ollama pull ${model}`);
+    }
+  }
 }

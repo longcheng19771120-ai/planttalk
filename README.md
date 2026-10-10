@@ -43,6 +43,52 @@ For the sensing part of the system, you'll also need:
 
 ![Codex prompt for building Plant Talk](readme_assets/2.png)
 
+## Run With Local Models
+
+This copy of Plant Talk runs on **local models by default** (`AI_PROVIDER=local`
+in `.env`), so there is no API key and no API bill. Camera frames stay on your
+computer.
+
+| Job | Local mode | OpenAI mode (`AI_PROVIDER=openai`) |
+|---|---|---|
+| Camera observations | A vision model in [Ollama](https://ollama.com) or LM Studio (default Qwen 3.8, `qwen3.8`) | `gpt-5.4` |
+| Voice conversation | The local chat model, fed live sensor readings every turn | `gpt-realtime-1.5` |
+| Speech to text | A local Whisper server if `LOCAL_STT_BASE_URL` is set, otherwise the browser's built-in recognition | Realtime API |
+| Text to speech | Your operating system's voices (browser `speechSynthesis`) | Realtime API |
+
+Quick start:
+
+```bash
+# 1. Install Ollama from https://ollama.com, then download a vision model
+ollama pull qwen3.8             # Qwen 3.8 27B, ~18 GB; see below for lighter models
+
+# 2. Set up and run Plant Talk
+npm run setup                   # creates .env and checks that Ollama and the model are ready
+npm install
+npm run dev                     # open http://localhost:3000 in Chrome or Edge
+```
+
+Notes:
+
+- Chrome and Edge run their built-in speech recognition in the cloud. For fully
+  offline speech, run an OpenAI-compatible Whisper server such as
+  [speaches](https://github.com/speaches-ai/speaches) and set
+  `LOCAL_STT_BASE_URL` (for example `http://127.0.0.1:8000/v1`).
+- The plant answers in the language you speak. For Chinese, install a Chinese
+  system voice and keep the voice on **Automatic**, or pick one in the
+  dashboard.
+- Local models don't stream reasoning summaries, so the observation panel shows
+  only the final structured observation.
+- The server only listens on `localhost`. Set `HOST=0.0.0.0` only if you trust
+  everyone on your network, because the API has no login.
+
+Hardware for local mode: the default Qwen 3.8 27B needs about 20 GB of memory
+for the model, so plan on a 24 GB GPU (RTX 3090/4090/5090) or an Apple Silicon
+Mac with 32 GB of unified memory (`ollama pull qwen3.8:27b-mlx` on a Mac). On
+smaller machines set `LOCAL_VISION_MODEL` to a lighter Qwen vision model:
+`qwen3.5:9b` or `qwen3-vl:8b` (8–12 GB GPU), or `qwen3-vl:4b` (CPU or 6 GB GPU).
+Voice replies turn off Qwen's thinking step for speed (`LOCAL_CHAT_THINKING=off`).
+
 ## How To Use
 
 ### Codex Take the Wheel
@@ -101,7 +147,7 @@ endless, and some starter built-in customization points include:
 ### Do I need an Arduino?
 
 No. You can run Plant Talk with only your computer, webcam, microphone, and
-OpenAI API access. But, the Arduino sensors make the readings far more useful
+either local models or OpenAI API access. But, the Arduino sensors make the readings far more useful
 (otherwise they're based only on what the webcam sees).
 
 ### Why Chrome or Edge?

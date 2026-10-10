@@ -4,6 +4,8 @@ import type { Request, Response } from "express";
 import type OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { ensureApiKey, getOpenAI } from "./openai";
+import { LOCAL_VISION_MODEL, getAiProvider } from "./ai-config";
+import { describeLocalError, localStructuredVision } from "./local";
 import { writeApiResponseLog } from "../src/lib/api/response-logging";
 import { PLANT_ANALYSIS_PROMPTS, PLANT_OBSERVER_PROMPTS } from "../src/lib/plant/prompts";
 import { plantAttributeAnalysisSchema, plantObserverResponseSchema } from "../src/lib/plant/schemas";
@@ -26,13 +28,34 @@ const MAX_IMAGE_DATA_URL_LENGTH = 11 * 1024 * 1024; // ~8 MB of image data once 
 // (which blocks every later observation until the server restarts).
 const MODEL_CALL_TIMEOUT_MS = 120_000;
 
+const localModelLabel = `${LOCAL_VISION_MODEL} (local)`;
+
 // POST /api/analyze
 
 export async function handleAnalyzeRequest(req: Request, res: Response) {
-  if (!ensureApiKey(res)) return;
+  const isLocal = getAiProvider() === "local";
+  if (!isLocal && !ensureApiKey(res)) return;
 
   const imageDataUrl = validateImageDataUrl(req.body?.image, res);
   if (!imageDataUrl) return;
+
+  if (isLocal) {
+    try {
+      const analysis = await localStructuredVision({
+        schema: plantAttributeAnalysisSchema,
+        schemaName: "plant_attribute_analysis",
+        system: PLANT_ANALYSIS_PROMPTS.system,
+        user: PLANT_ANALYSIS_PROMPTS.user,
+        imageDataUrl,
+        signal: abortOnDisconnect(res),
+      });
+      res.json({ analysis, model: `${localModelLabel} structured vision` });
+    } catch (error) {
+      console.error("Local plant analysis error:", error);
+      res.status(502).json({ error: describeLocalError(error, "Failed to analyze the plant image.") });
+    }
+    return;
+  }
 
   try {
     const response = await getOpenAI().responses.parse(
@@ -78,7 +101,8 @@ export async function handleAnalyzeRequest(req: Request, res: Response) {
 // POST /api/observe
 
 export async function handleObserveRequest(req: Request, res: Response) {
-  if (!ensureApiKey(res)) return;
+  const isLocal = getAiProvider() === "local";
+  if (!isLocal && !ensureApiKey(res)) return;
 
   const imageDataUrl = validateImageDataUrl(req.body?.image, res);
   if (!imageDataUrl) return;
@@ -115,6 +139,21 @@ export async function handleObserveRequest(req: Request, res: Response) {
     },
   ];
 
+  if (isLocal) {
+    await observeWithLocalModel({
+      res,
+      shouldStream,
+      sensorReadings,
+      userPrompt: PLANT_OBSERVER_PROMPTS.user({
+        sensorSummary: formatSensorSummary(sensorReadings),
+        hardwareSummary,
+        historySummary,
+      }),
+      imageDataUrl,
+    });
+    return;
+  }
+
   if (shouldStream) {
     await streamObserverReasoning({ res, modelInput, sensorReadings });
     return;
@@ -147,6 +186,64 @@ export async function handleObserveRequest(req: Request, res: Response) {
   } catch (error) {
     console.error("Plant observation error:", error);
     res.status(500).json({ error: "Failed to observe the plant." });
+  }
+}
+
+// Local models don't stream reasoning summaries; when the browser asked for a
+// stream, answer in the same NDJSON shape so the dashboard code is unchanged.
+async function observeWithLocalModel({
+  res,
+  shouldStream,
+  sensorReadings,
+  userPrompt,
+  imageDataUrl,
+}: {
+  res: Response;
+  shouldStream: boolean;
+  sensorReadings: PlantSensorReadings;
+  userPrompt: string;
+  imageDataUrl: string;
+}) {
+  const signal = abortOnDisconnect(res);
+  if (shouldStream) {
+    res.status(200);
+    res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+  }
+  const send = (payload: unknown) => res.write(`${JSON.stringify(payload)}\n`);
+
+  try {
+    const observerResponse = await localStructuredVision({
+      schema: plantObserverResponseSchema,
+      schemaName: "plant_observer_response",
+      system: PLANT_OBSERVER_PROMPTS.system,
+      user: userPrompt,
+      imageDataUrl,
+      signal,
+    });
+    const payload = {
+      ...observerResponse,
+      sensorReadings,
+      model: `${localModelLabel} structured plant observer`,
+    };
+    writeApiResponseLog(payload);
+
+    if (shouldStream) {
+      send({ type: "reasoning_summary_unavailable", message: "Local models do not stream reasoning summaries." });
+      send({ type: "final", data: payload });
+      res.end();
+    } else {
+      res.json(payload);
+    }
+  } catch (error) {
+    console.error("Local plant observation error:", error);
+    const message = describeLocalError(error, "Failed to observe the plant.");
+    if (shouldStream) {
+      send({ type: "error", error: message, code: null, retryable: false });
+      res.end();
+    } else {
+      res.status(502).json({ error: message });
+    }
   }
 }
 
@@ -284,6 +381,15 @@ function abortOnDisconnectOrTimeout(res: Response) {
     if (!res.writableEnded) controller.abort();
   });
   res.on("finish", () => clearTimeout(timer));
+  return controller.signal;
+}
+
+// Local calls have their own (longer) timeout; only stop on disconnect.
+function abortOnDisconnect(res: Response) {
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableEnded) controller.abort();
+  });
   return controller.signal;
 }
 

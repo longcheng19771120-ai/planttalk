@@ -1,7 +1,11 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const apiLogsDirectoryPath = path.join(process.cwd(), "logs");
+
+// Keep only the newest logs so a long-running kiosk doesn't fill the disk
+// (~5 days of observations at the default 15-minute cadence).
+const MAX_LOG_FILES = 500;
 
 export function createResponseLogFilename(date = new Date()) {
   const year = String(date.getFullYear());
@@ -24,9 +28,17 @@ export function writeApiResponseLog(payload: unknown) {
 
   void mkdir(apiLogsDirectoryPath, { recursive: true })
     .then(() => writeFile(filePath, fileBody, "utf8"))
+    .then(pruneOldLogs)
     .catch((error) => {
       console.error("Failed to write API response log:", error);
     });
+}
+
+// File names are timestamps, so lexical order is chronological.
+async function pruneOldLogs() {
+  const logFiles = (await readdir(apiLogsDirectoryPath)).filter((name) => /^\d{17}\.json$/.test(name)).sort();
+  const excess = logFiles.slice(0, Math.max(0, logFiles.length - MAX_LOG_FILES));
+  await Promise.all(excess.map((name) => unlink(path.join(apiLogsDirectoryPath, name)).catch(() => {})));
 }
 
 export function jsonResponseWithLog(payload: unknown, init?: ResponseInit) {

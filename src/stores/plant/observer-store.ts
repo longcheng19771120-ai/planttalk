@@ -9,7 +9,7 @@ import type { PlantObserverThought, PlantTrendDirection } from "@/lib/plant/sche
 // Observation memory persisted to IndexedDB.
 
 const PLANT_OBSERVER_STORE_KEY = "plant-observer-store/v1";
-const MAX_OBSERVATIONS = 1440; // ring buffer cap (~10 days at the default 10-minute cycle)
+const MAX_OBSERVATIONS = 1440; // ring buffer cap (~15 days at the default 15-minute cycle)
 const HISTORY_RECENT_COUNT = 5; // most recent records, anchored to "right now"
 const HISTORY_SPARSE_COUNT = 6; // evenly-spaced anchors across the full stored window
 

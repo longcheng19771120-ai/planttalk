@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { PLANT_NAME, PLANT_VOICES } from "@/lib/plant/realtime-config";
 import { selectIsConversationActive, useConversationStore } from "@/stores/plant/conversation-store";
 import { useMicrophoneStore } from "@/stores/plant/microphone-store";
+import { useAiConfigStore } from "@/stores/plant/ai-config-store";
 import { actionGlyph, type ActionStatus } from "@/components/dashboard/action-glyph";
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -11,6 +12,20 @@ function formatElapsed(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+// Local mode speaks with the browser's own voices, which load asynchronously.
+function useBrowserVoices(enabled: boolean) {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined" || !window.speechSynthesis) return;
+    const synth = window.speechSynthesis;
+    const update = () => setVoices(synth.getVoices());
+    update();
+    synth.addEventListener("voiceschanged", update);
+    return () => synth.removeEventListener("voiceschanged", update);
+  }, [enabled]);
+  return voices;
 }
 
 // The connection owns a detached audio element created inside the click gesture.
@@ -36,6 +51,8 @@ export function VoiceConversationPanel() {
   const selectMicrophone = useMicrophoneStore((s) => s.selectMicrophone);
   const selectedVoice = useConversationStore((s) => s.selectedVoice);
   const setVoice = useConversationStore((s) => s.setVoice);
+  const provider = useAiConfigStore((s) => s.provider);
+  const browserVoices = useBrowserVoices(provider === "local");
 
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -107,13 +124,28 @@ export function VoiceConversationPanel() {
 
       <label>
         Voice
-        <select value={selectedVoice} disabled={isActive} onChange={(event) => setVoice(event.target.value)}>
-          {PLANT_VOICES.map((voice) => (
-            <option key={voice} value={voice}>
-              {titleCase(voice)}
-            </option>
-          ))}
-        </select>
+        {provider === "openai" ? (
+          <select value={selectedVoice} disabled={isActive} onChange={(event) => setVoice(event.target.value)}>
+            {PLANT_VOICES.map((voice) => (
+              <option key={voice} value={voice}>
+                {titleCase(voice)}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select
+            value={browserVoices.some((voice) => voice.name === selectedVoice) ? selectedVoice : ""}
+            disabled={isActive}
+            onChange={(event) => setVoice(event.target.value)}
+          >
+            <option value="">Automatic (matches the reply's language)</option>
+            {browserVoices.map((voice) => (
+              <option key={voice.name} value={voice.name}>
+                {voice.name} ({voice.lang})
+              </option>
+            ))}
+          </select>
+        )}
         {isActive && <small>Hang up to change the voice.</small>}
       </label>
 
@@ -124,7 +156,11 @@ export function VoiceConversationPanel() {
             {isPlantSpeaking ? "🪴 speaking" : "·"}
           </small>
           <LevelMeters />
-          <small>Auto-hangs up after a minute of silence to save on API costs.</small>
+          <small>
+            {provider === "openai"
+              ? "Auto-hangs up after a minute of silence to save on API costs."
+              : "Running on local models. Auto-hangs up after 90 seconds of silence."}
+          </small>
         </div>
       )}
 
