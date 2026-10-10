@@ -1,5 +1,6 @@
 import { usePlantObserverStore } from "@/stores/plant/observer-store";
 import { describeLightReading } from "@/lib/plant/sensors";
+import { lightLabel, trendLabel } from "@/lib/plant/labels";
 
 const VISIBLE_HISTORY_COUNT = 25;
 
@@ -14,13 +15,13 @@ export function HistoryPanel() {
   return (
     <article>
       <header>
-        <strong>Observation history</strong>{" "}
-        <small>({observations.length} stored in IndexedDB)</small>
+        <strong>观察记录</strong>{" "}
+        <small>（IndexedDB 中已存 {observations.length} 条）</small>
       </header>
 
       {recentFirst.length === 0 ? (
         <p>
-          <small>No observations recorded yet. Run the observation loop to build the plant's memory.</small>
+          <small>还没有观察记录。运行观察循环来建立植物的记忆。</small>
         </p>
       ) : (
         <ul className="history-list">
@@ -29,14 +30,14 @@ export function HistoryPanel() {
               <small>
                 <strong>{new Date(record.recordedAt).toLocaleString()}</strong>{" "}
                 {/* Flag slider-based readings so the list doesn't imply they were measured. */}
-                <span title={record.sensorSource === "fallback" ? "readings from manual sliders" : "readings from the Arduino"}>
+                <span title={record.sensorSource === "fallback" ? "读数来自手动滑块" : "读数来自 Arduino"}>
                   {record.sensorSource === "fallback" ? "🎚️" : "🔌"}
                 </span>{" "}
                 — {record.observation}{" "}
                 <em>
-                  (moisture {Math.round(record.sensorReadings.moisture)}%, light{" "}
-                  {describeLightReading(record.sensorReadings.light)}, dryness {record.dryness}/10,{" "}
-                  {record.trend})
+                  （湿度 {Math.round(record.sensorReadings.moisture)}%，光照{" "}
+                  {lightLabel(describeLightReading(record.sensorReadings.light))}，干燥度 {record.dryness}/10，{" "}
+                  {trendLabel(record.trend)}）
                 </em>
               </small>
             </li>
@@ -50,12 +51,12 @@ export function HistoryPanel() {
             type="button"
             className="secondary"
             onClick={() => {
-              if (window.confirm("Erase the plant's entire observation history?")) {
+              if (window.confirm("确定要清除植物的全部观察记录吗？")) {
                 clearObservations();
               }
             }}
           >
-            Clear history
+            清除记录
           </button>
         </footer>
       )}

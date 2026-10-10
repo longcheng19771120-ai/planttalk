@@ -11,22 +11,21 @@ export function PlantUploadPanel() {
   return (
     <article>
       <header>
-        <strong>Plant image intake</strong>
+        <strong>植物照片上传</strong>
       </header>
 
       <p>
         <small>
-          Use a clear photo of one plant. If the frame contains more than one, the API targets the most dominant
-          subject.
+          请使用一张清晰的单株植物照片。如果画面里有多株，模型会分析最主要的那一株。
         </small>
       </p>
 
       <label>
-        Plant photo (JPG, PNG, or WebP up to 8 MB)
+        植物照片（JPG、PNG 或 WebP，最大 8 MB）
         <input type="file" accept="image/*" onChange={(event) => setImageFile(event.target.files?.[0] ?? null)} />
       </label>
 
-      {previewUrl && <img src={previewUrl} alt="Selected plant preview" />}
+      {previewUrl && <img src={previewUrl} alt="所选植物预览" />}
 
       <footer>
         <button
@@ -35,7 +34,7 @@ export function PlantUploadPanel() {
           aria-busy={isSubmitting}
           onClick={analyzePlantImage}
         >
-          {isSubmitting ? "Analyzing image…" : "Analyze plant image"}
+          {isSubmitting ? "正在分析照片…" : "分析植物照片"}
         </button>
 
         {errorMessage && (

@@ -40,7 +40,7 @@ export const plantTrendDirectionSchema = z
 
 export const plantObserverThoughtSchema = z
   .string()
-  .min(18)
+  .min(6)
   .max(OBSERVER_THOUGHT_MAX_LENGTH)
   .describe("A user-visible observer checkpoint grounded in current sensors, visual evidence, or recent history.");
 
@@ -55,14 +55,14 @@ export const plantObserverResponseSchema = z.object({
     ),
   observation: z
     .string()
-    .min(12)
+    .min(6)
     .max(160)
     .describe(
       "One neutral, empirical sentence recording what is visible now and how it compares to prior observations.",
     ),
   hypothesis: z
     .string()
-    .min(12)
+    .min(6)
     .max(OBSERVER_HYPOTHESIS_MAX_LENGTH)
     .describe("A short, falsifiable hypothesis about the plant's current state and likely next change."),
   trend: plantTrendDirectionSchema,

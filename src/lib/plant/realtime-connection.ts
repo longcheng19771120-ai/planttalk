@@ -107,7 +107,7 @@ export class RealtimeVoiceConnection {
       });
       if (!tokenResponse.ok) {
         const data = (await tokenResponse.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? "Failed to get a Realtime session token.");
+        throw new Error(data?.error ?? "获取 Realtime 会话令牌失败。");
       }
       const { clientSecret } = (await tokenResponse.json()) as { clientSecret: string };
       if (this.cancelled) return this.releaseResources();
@@ -152,7 +152,7 @@ export class RealtimeVoiceConnection {
         // Only "failed" is terminal — WebRTC's "disconnected" state is often a
         // transient network blip that recovers on its own within seconds.
         if (pc.connectionState === "failed") {
-          this.callbacks.onError("Connection to the Realtime API was lost.");
+          this.callbacks.onError("与 Realtime API 的连接已断开。");
           this.disconnect();
         }
       };
@@ -183,7 +183,7 @@ export class RealtimeVoiceConnection {
       if (this.cancelled) return this.releaseResources();
 
       if (!sdpResponse.ok) {
-        throw new Error(`Realtime SDP exchange failed (HTTP ${sdpResponse.status}).`);
+        throw new Error(`Realtime SDP 交换失败（HTTP ${sdpResponse.status}）。`);
       }
 
       await pc.setRemoteDescription({ type: "answer", sdp: await sdpResponse.text() });
@@ -193,10 +193,10 @@ export class RealtimeVoiceConnection {
       this.disconnect();
       const message =
         error instanceof DOMException && error.name === "NotAllowedError"
-          ? "Microphone access was denied. Allow the mic to talk to the plant."
+          ? "麦克风权限被拒绝。请允许使用麦克风来和植物聊天。"
           : error instanceof Error
             ? error.message
-            : "Failed to start the voice conversation.";
+            : "无法开始语音对话。";
       this.callbacks.onStatusChange("error", message);
       this.callbacks.onError(message);
     }
@@ -213,7 +213,7 @@ export class RealtimeVoiceConnection {
   private resetIdleTimer() {
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.idleTimer = setTimeout(() => {
-      this.disconnect("Ended after a minute of silence to save on API costs. Tap to start again.");
+      this.disconnect("静默一分钟后已结束，以节省 API 费用。点击重新开始。");
     }, IDLE_TIMEOUT_MS);
   }
 
@@ -320,7 +320,7 @@ export class RealtimeVoiceConnection {
       case "error": {
         const err = event.error as { message?: string } | undefined;
         console.error("[realtime] Server error event:", event);
-        this.callbacks.onError(err?.message ?? "The Realtime API reported an error.");
+        this.callbacks.onError(err?.message ?? "Realtime API 报告了一个错误。");
         break;
       }
     }

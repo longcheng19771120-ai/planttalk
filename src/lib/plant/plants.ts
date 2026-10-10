@@ -48,18 +48,18 @@ export const placeholderPlantAnalysisJson = JSON.stringify(
 export const plantSensorFields: PlantSensorField[] = [
   {
     key: "moisture",
-    label: "Soil moisture",
+    label: "土壤湿度",
     unit: "%",
-    helper: "capacitive soil moisture probe in the pot",
+    helper: "插在盆里的电容式土壤湿度探头",
     min: PLANT_SENSOR_LIMITS.moisture.min,
     max: PLANT_SENSOR_LIMITS.moisture.max,
     step: 1,
   },
   {
     key: "light",
-    label: "Light",
+    label: "光照",
     unit: "%",
-    helper: "binary light sensor — above 50 reads as on",
+    helper: "开关式光照传感器——高于 50 视为亮",
     min: PLANT_SENSOR_LIMITS.light.min,
     max: PLANT_SENSOR_LIMITS.light.max,
     step: 1,
@@ -77,7 +77,7 @@ export async function analyzePlantImageFile(imageFile: File): Promise<PlantAnaly
     body: JSON.stringify({ image: await fileToDataUrl(imageFile) }),
   });
 
-  const data = await readJsonResponse<PlantAnalysisResponse>(response, "Plant analysis failed");
+  const data = await readJsonResponse<PlantAnalysisResponse>(response, "植物分析失败");
   return data;
 }
 
@@ -108,7 +108,7 @@ export async function observePlantFile({
     }),
   });
 
-  const data = await readJsonResponse<PlantObservationResponse>(response, "Plant observation failed");
+  const data = await readJsonResponse<PlantObservationResponse>(response, "植物观察失败");
   return data;
 }
 
@@ -144,11 +144,11 @@ export async function observePlantFileWithReasoningStream({
       error?: string;
     } | null;
 
-    throw new Error(data?.error ?? `Plant observation stream failed (HTTP ${response.status})`);
+    throw new Error(data?.error ?? `植物观察数据流失败（HTTP ${response.status}）`);
   }
 
   if (!response.body) {
-    throw new Error("Plant observation stream was not returned by the server");
+    throw new Error("服务器没有返回植物观察数据流");
   }
 
   let finalPayload: PlantObservationResponse | null = null;
@@ -175,7 +175,7 @@ export async function observePlantFileWithReasoningStream({
   });
 
   if (!finalPayload) {
-    throw new Error("Plant observation stream completed without final payload");
+    throw new Error("植物观察数据流结束，但没有最终结果");
   }
 
   return finalPayload;
@@ -188,7 +188,7 @@ export function formatSensorValue(value: number, unit: string, step: number) {
 
 function assertImageFileSize(file: File) {
   if (file.size > MAX_IMAGE_FILE_BYTES) {
-    throw new Error("The uploaded image must be 8 MB or smaller.");
+    throw new Error("上传的图片不能超过 8 MB。");
   }
 }
 
@@ -208,7 +208,7 @@ function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error("Failed to read image file"));
+    reader.onerror = () => reject(reader.error ?? new Error("读取图片文件失败"));
     reader.readAsDataURL(file);
   });
 }

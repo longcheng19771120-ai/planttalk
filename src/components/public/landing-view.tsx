@@ -17,7 +17,7 @@ export function LandingView({ onStart, onHoverChange }: LandingViewProps) {
         onFocus={() => onHoverChange?.(true)}
         onBlur={() => onHoverChange?.(false)}
       >
-        <span className="public-experience__headline">Talk to {PLANT_NAME}</span>
+        <span className="public-experience__headline">和{PLANT_NAME}聊天</span>
       </button>
     </div>
   );

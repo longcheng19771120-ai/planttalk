@@ -17,7 +17,7 @@ export async function captureFrameFromStream(stream: MediaStream): Promise<File>
       // timeout this promise could hang forever and wedge the observation loop.
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(
-          () => reject(new Error("Timed out waiting for a camera frame.")),
+          () => reject(new Error("等待摄像头画面超时。")),
           10_000,
         );
         video.onloadeddata = () => {
@@ -26,7 +26,7 @@ export async function captureFrameFromStream(stream: MediaStream): Promise<File>
         };
         video.onerror = () => {
           clearTimeout(timeout);
-          reject(new Error("Camera stream failed to produce a frame."));
+          reject(new Error("摄像头没有输出画面。"));
         };
       });
     }
@@ -43,7 +43,7 @@ export async function captureFrameFromStream(stream: MediaStream): Promise<File>
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (result) => (result ? resolve(result) : reject(new Error("Failed to encode camera frame."))),
+        (result) => (result ? resolve(result) : reject(new Error("摄像头画面编码失败。"))),
         "image/jpeg",
         0.85,
       );

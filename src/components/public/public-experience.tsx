@@ -73,7 +73,7 @@ export function AmbientExperience({ onExit }: AmbientExperienceProps) {
       </div>
 
       <div className={`public-experience__hint${showHint ? "" : " public-experience__hint--hidden"}`} role="status">
-        Press <kbd>Esc</kbd> to return to the dashboard
+        按 <kbd>Esc</kbd> 返回控制面板
       </div>
     </div>
   );

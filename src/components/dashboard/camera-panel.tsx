@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { usePlantCameraStore } from "@/stores/plant/camera-store";
+import { cameraStatusLabel } from "@/lib/plant/labels";
 import { actionGlyph, type ActionStatus } from "@/components/dashboard/action-glyph";
 
 export function CameraPanel() {
@@ -54,25 +55,25 @@ export function CameraPanel() {
   return (
     <article>
       <header>
-        {actionGlyph(status)} <strong>Camera</strong> <small>({cameraStatus})</small>
+        {actionGlyph(status)} <strong>摄像头</strong> <small>（{cameraStatusLabel(cameraStatus)}）</small>
       </header>
 
       {availableCameras.length > 0 && (
         <label>
-          Camera device
+          摄像头设备
           <select
             value={selectedCameraId ?? ""}
             disabled={cameraStatus === "starting"}
             onChange={(event) => selectCamera(event.target.value || null)}
           >
-            <option value="">Browser default</option>
+            <option value="">浏览器默认</option>
             {availableCameras.map((camera) => (
               <option key={camera.deviceId} value={camera.deviceId}>
                 {camera.label}
               </option>
             ))}
           </select>
-          {selectionMissing && <small>The previously selected camera is not connected.</small>}
+          {selectionMissing && <small>之前选择的摄像头未连接。</small>}
         </label>
       )}
 
@@ -81,8 +82,7 @@ export function CameraPanel() {
       ) : (
         <p>
           <small>
-            The camera feeds the observation loop — the plant photo sent to the model every cycle
-            comes from here.
+            摄像头为观察循环供图——每轮发送给模型的植物照片都来自这里。
           </small>
         </p>
       )}
@@ -101,7 +101,7 @@ export function CameraPanel() {
           aria-busy={cameraStatus === "starting"}
           onClick={cameraStatus === "ready" ? stopCamera : () => void startCamera()}
         >
-          {cameraStatus === "ready" ? "Stop camera" : "Start camera"}
+          {cameraStatus === "ready" ? "关闭摄像头" : "打开摄像头"}
         </button>
       </footer>
     </article>

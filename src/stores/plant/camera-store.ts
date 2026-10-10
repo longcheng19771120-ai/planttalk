@@ -44,7 +44,7 @@ export const usePlantCameraStore = create<PlantCameraState>()((set, get) => ({
     if (!("mediaDevices" in navigator) || typeof navigator.mediaDevices.getUserMedia !== "function") {
       set({
         cameraStatus: "unsupported",
-        cameraError: "This browser does not expose webcam access.",
+        cameraError: "此浏览器不支持访问摄像头。",
       });
       return;
     }
@@ -89,7 +89,7 @@ export const usePlantCameraStore = create<PlantCameraState>()((set, get) => ({
           cameraError:
             fallbackError instanceof Error
               ? fallbackError.message
-              : "Unable to access camera. Check permissions and that the camera is not in use.",
+              : "无法访问摄像头。请检查权限，并确认摄像头没有被占用。",
         });
         return;
       }
@@ -119,7 +119,7 @@ export const usePlantCameraStore = create<PlantCameraState>()((set, get) => ({
         .filter((device) => device.kind === "videoinput" && device.deviceId)
         .map((device, index) => ({
           deviceId: device.deviceId,
-          label: device.label || `Camera ${index + 1}`,
+          label: device.label || `摄像头 ${index + 1}`,
         }));
       set({ availableCameras: cameras });
     } catch (error) {
@@ -174,7 +174,7 @@ export const usePlantCameraStore = create<PlantCameraState>()((set, get) => ({
 export async function captureLiveFrame(): Promise<File> {
   const stream = usePlantCameraStore.getState().cameraStream;
   if (!stream) {
-    throw new Error("Camera is not running.");
+    throw new Error("摄像头未运行。");
   }
   return captureFrameFromStream(stream);
 }

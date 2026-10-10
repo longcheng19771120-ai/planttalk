@@ -3,6 +3,7 @@ import { PLANT_NAME, PLANT_VOICES } from "@/lib/plant/realtime-config";
 import { selectIsConversationActive, useConversationStore } from "@/stores/plant/conversation-store";
 import { useMicrophoneStore } from "@/stores/plant/microphone-store";
 import { useAiConfigStore } from "@/stores/plant/ai-config-store";
+import { conversationStatusLabel } from "@/lib/plant/labels";
 import { actionGlyph, type ActionStatus } from "@/components/dashboard/action-glyph";
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -99,31 +100,31 @@ export function VoiceConversationPanel() {
   return (
     <article>
       <header>
-        {actionGlyph(actionStatus)} <strong>Talk to {PLANT_NAME}</strong> <small>({status})</small>
+        {actionGlyph(actionStatus)} <strong>和{PLANT_NAME}聊天</strong> <small>（{conversationStatusLabel(status)}）</small>
       </header>
 
       {availableMicrophones.length > 0 && (
         <label>
-          Microphone
+          麦克风
           <select
             value={selectedMicrophoneId ?? ""}
             disabled={isActive}
             onChange={(event) => selectMicrophone(event.target.value || null)}
           >
-            <option value="">Browser default</option>
+            <option value="">浏览器默认</option>
             {availableMicrophones.map((mic) => (
               <option key={mic.deviceId} value={mic.deviceId}>
                 {mic.label}
               </option>
             ))}
           </select>
-          {isActive && <small>Hang up to switch microphones.</small>}
-          {selectionMissing && <small>The previously selected microphone is not connected.</small>}
+          {isActive && <small>挂断后才能切换麦克风。</small>}
+          {selectionMissing && <small>之前选择的麦克风未连接。</small>}
         </label>
       )}
 
       <label>
-        Voice
+        声音
         {provider === "openai" ? (
           <select value={selectedVoice} disabled={isActive} onChange={(event) => setVoice(event.target.value)}>
             {PLANT_VOICES.map((voice) => (
@@ -138,7 +139,7 @@ export function VoiceConversationPanel() {
             disabled={isActive}
             onChange={(event) => setVoice(event.target.value)}
           >
-            <option value="">Automatic (matches the reply's language)</option>
+            <option value="">自动（匹配回复的语言）</option>
             {browserVoices.map((voice) => (
               <option key={voice.name} value={voice.name}>
                 {voice.name} ({voice.lang})
@@ -146,20 +147,20 @@ export function VoiceConversationPanel() {
             ))}
           </select>
         )}
-        {isActive && <small>Hang up to change the voice.</small>}
+        {isActive && <small>挂断后才能更换声音。</small>}
       </label>
 
       {status === "connected" && (
         <div>
           <small>
-            ⏱ {formatElapsed(elapsedMs)} · You {isUserSpeaking ? "🎙️ speaking" : "·"} — {PLANT_NAME}{" "}
-            {isPlantSpeaking ? "🪴 speaking" : "·"}
+            ⏱ {formatElapsed(elapsedMs)} · 你 {isUserSpeaking ? "🎙️ 说话中" : "·"} — {PLANT_NAME}{" "}
+            {isPlantSpeaking ? "🪴 说话中" : "·"}
           </small>
           <LevelMeters />
           <small>
             {provider === "openai"
-              ? "Auto-hangs up after a minute of silence to save on API costs."
-              : "Running on local models. Auto-hangs up after 90 seconds of silence."}
+              ? "静默一分钟后自动挂断，以节省 API 费用。"
+              : "正在使用本地模型。静默 90 秒后自动挂断。"}
           </small>
         </div>
       )}
@@ -169,7 +170,7 @@ export function VoiceConversationPanel() {
           {transcript.map((entry) => (
             <p key={entry.id} className={entry.role === "user" ? "transcript-user" : "transcript-plant"}>
               <small>
-                <strong>{entry.role === "user" ? "You" : PLANT_NAME}:</strong> {entry.text || "…"}
+                <strong>{entry.role === "user" ? "你" : PLANT_NAME}：</strong> {entry.text || "…"}
               </small>
             </p>
           ))}
@@ -181,14 +182,14 @@ export function VoiceConversationPanel() {
         <details>
           <summary>
             <small>
-              {PLANT_NAME} checked {toolActivity.length === 1 ? "a sense" : `senses ${toolActivity.length} times`} 🔧
+              {PLANT_NAME}感知了 {toolActivity.length} 次自身状态 🔧
             </small>
           </summary>
           <ul>
             {toolActivity.map((entry) => (
               <li key={entry.callId}>
                 <small>
-                  <code>{entry.name}</code> → <code>{entry.result ?? "running…"}</code>
+                  <code>{entry.name}</code> → <code>{entry.result ?? "运行中…"}</code>
                 </small>
               </li>
             ))}
@@ -199,7 +200,7 @@ export function VoiceConversationPanel() {
       {debugEvents.length > 0 && (
         <details>
           <summary>
-            <small>Raw server events (last {debugEvents.length})</small>
+            <small>原始服务器事件（最近 {debugEvents.length} 条）</small>
           </summary>
           <p>
             <small>
@@ -227,22 +228,21 @@ export function VoiceConversationPanel() {
             aria-busy={isActive && status !== "connected"}
             onClick={isActive ? disconnect : () => void connect()}
           >
-            {isActive ? "Hang up" : `Talk to ${PLANT_NAME}`}
+            {isActive ? "挂断" : `和${PLANT_NAME}聊天`}
           </button>
           {status === "connected" && (
             <button type="button" className="secondary" onClick={toggleMute}>
-              {isMuted ? "Unmute mic" : "Mute mic"}
+              {isMuted ? "打开麦克风" : "静音麦克风"}
             </button>
           )}
           {transcript.length > 0 && !isActive && (
             <button type="button" className="secondary" onClick={clearTranscript}>
-              Clear transcript
+              清除对话记录
             </button>
           )}
         </div>
         <small>
-          Customize {PLANT_NAME}'s personality in <code>src/lib/plant/realtime-config.ts</code> (the{" "}
-          <code>PLANT_INSTRUCTIONS</code> string).
+          在 <code>src/lib/plant/realtime-config.ts</code> 中的 <code>PLANT_INSTRUCTIONS</code> 字符串里自定义{PLANT_NAME}的性格。
         </small>
       </footer>
     </article>
