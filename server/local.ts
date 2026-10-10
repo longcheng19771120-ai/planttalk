@@ -2,11 +2,12 @@
 // through OpenAI-compatible endpoints (Ollama, LM Studio, a Whisper server).
 
 import type { Request, Response } from "express";
-import { toFile } from "openai";
+import OpenAI, { toFile } from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type { z } from "zod";
 import {
   LOCAL_CHAT_MODEL,
+  LOCAL_CHAT_THINKING,
   LOCAL_STT_MODEL,
   LOCAL_VISION_MODEL,
   ensureLocalProvider,
@@ -157,24 +158,37 @@ export async function handleLocalChatRequest(req: Request, res: Response) {
     if (!res.writableEnded) controller.abort();
   });
 
-  try {
-    const completion = await getLocalLlmClient().chat.completions.create(
+  const request: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
+    model: LOCAL_CHAT_MODEL,
+    temperature: 0.8,
+    max_tokens: 300,
+    messages: [
       {
-        model: LOCAL_CHAT_MODEL,
-        temperature: 0.8,
-        max_tokens: 300,
-        messages: [
-          {
-            role: "system",
-            content: context
-              ? `${PLANT_LOCAL_INSTRUCTIONS}\n\nCURRENT SENSES\n${context}`
-              : PLANT_LOCAL_INSTRUCTIONS,
-          },
-          ...messages,
-        ],
+        role: "system",
+        content: context ? `${PLANT_LOCAL_INSTRUCTIONS}\n\nCURRENT SENSES\n${context}` : PLANT_LOCAL_INSTRUCTIONS,
       },
-      { signal: controller.signal, timeout: LOCAL_CHAT_TIMEOUT_MS, maxRetries: 0 },
-    );
+      ...messages,
+    ],
+  };
+  const requestOptions = { signal: controller.signal, timeout: LOCAL_CHAT_TIMEOUT_MS, maxRetries: 0 };
+
+  try {
+    let completion: OpenAI.Chat.ChatCompletion;
+    if (LOCAL_CHAT_THINKING) {
+      completion = await getLocalLlmClient().chat.completions.create(request, requestOptions);
+    } else {
+      try {
+        // Ollama maps reasoning_effort "none" to think=false.
+        completion = await getLocalLlmClient().chat.completions.create(
+          { ...request, reasoning_effort: "none" as OpenAI.ReasoningEffort },
+          requestOptions,
+        );
+      } catch (error) {
+        // Servers or models that don't understand the field: ask again without it.
+        if (!(error instanceof OpenAI.BadRequestError)) throw error;
+        completion = await getLocalLlmClient().chat.completions.create(request, requestOptions);
+      }
+    }
 
     const reply = cleanSpokenReply(completion.choices[0]?.message?.content ?? "");
     if (!reply) {

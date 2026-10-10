@@ -16,8 +16,12 @@ export function getAiProvider(): AiProvider {
 }
 
 export const LOCAL_LLM_BASE_URL = readEnv("LOCAL_LLM_BASE_URL") ?? "http://127.0.0.1:11434/v1";
-export const LOCAL_VISION_MODEL = readEnv("LOCAL_VISION_MODEL") ?? "qwen2.5vl:7b";
+export const LOCAL_VISION_MODEL = readEnv("LOCAL_VISION_MODEL") ?? "qwen3.8";
 export const LOCAL_CHAT_MODEL = readEnv("LOCAL_CHAT_MODEL") ?? LOCAL_VISION_MODEL;
+
+// Thinking models (Qwen 3.8 thinks by default) are too slow for spoken replies,
+// so voice turns ask for no reasoning unless LOCAL_CHAT_THINKING=on.
+export const LOCAL_CHAT_THINKING = readEnv("LOCAL_CHAT_THINKING")?.toLowerCase() === "on";
 
 // Optional. When unset, the browser's own speech recognition is used instead.
 export const LOCAL_STT_BASE_URL = readEnv("LOCAL_STT_BASE_URL");

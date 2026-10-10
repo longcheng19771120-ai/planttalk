@@ -305,7 +305,8 @@ Check the common failures first:
 - `The local model server is not reachable`: start Ollama (or the server in
   `LOCAL_LLM_BASE_URL`) and confirm `ollama list` shows the model.
 - `The model was not found`: run `ollama pull <LOCAL_VISION_MODEL>`.
-- Local observations are slow: use `qwen2.5vl:3b` or raise the interval.
+- Local observations are slow: Qwen 3.8 27B needs a 24 GB GPU; on smaller
+  machines set `LOCAL_VISION_MODEL=qwen3-vl:8b` (or `qwen3-vl:4b`), or raise the interval.
 - Voice says speech recognition could not reach its online service: the
   browser's built-in recognition needs internet; set `LOCAL_STT_BASE_URL` to a
   local Whisper server for offline use.

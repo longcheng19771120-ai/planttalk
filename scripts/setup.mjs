@@ -72,7 +72,7 @@ function readEnvValue(contents, name) {
 // Local mode: confirm the model server answers and the models are pulled.
 async function checkLocalModels(contents) {
   const baseUrl = (readEnvValue(contents, "LOCAL_LLM_BASE_URL") || "http://127.0.0.1:11434/v1").replace(/\/$/, "");
-  const visionModel = readEnvValue(contents, "LOCAL_VISION_MODEL") || "qwen2.5vl:7b";
+  const visionModel = readEnvValue(contents, "LOCAL_VISION_MODEL") || "qwen3.8";
   const chatModel = readEnvValue(contents, "LOCAL_CHAT_MODEL") || visionModel;
   console.log(`AI provider: local models at ${baseUrl}`);
 

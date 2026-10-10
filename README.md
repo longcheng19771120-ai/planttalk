@@ -51,7 +51,7 @@ computer.
 
 | Job | Local mode | OpenAI mode (`AI_PROVIDER=openai`) |
 |---|---|---|
-| Camera observations | A vision model in [Ollama](https://ollama.com) or LM Studio (default `qwen2.5vl:7b`) | `gpt-5.4` |
+| Camera observations | A vision model in [Ollama](https://ollama.com) or LM Studio (default Qwen 3.8, `qwen3.8`) | `gpt-5.4` |
 | Voice conversation | The local chat model, fed live sensor readings every turn | `gpt-realtime-1.5` |
 | Speech to text | A local Whisper server if `LOCAL_STT_BASE_URL` is set, otherwise the browser's built-in recognition | Realtime API |
 | Text to speech | Your operating system's voices (browser `speechSynthesis`) | Realtime API |
@@ -60,7 +60,7 @@ Quick start:
 
 ```bash
 # 1. Install Ollama from https://ollama.com, then download a vision model
-ollama pull qwen2.5vl:7b        # ~6 GB; use qwen2.5vl:3b on weaker machines
+ollama pull qwen3.8             # Qwen 3.8 27B, ~18 GB; see below for lighter models
 
 # 2. Set up and run Plant Talk
 npm run setup                   # creates .env and checks that Ollama and the model are ready
@@ -82,9 +82,12 @@ Notes:
 - The server only listens on `localhost`. Set `HOST=0.0.0.0` only if you trust
   everyone on your network, because the API has no login.
 
-Hardware for local mode: a 7B vision model wants a GPU with about 8 GB of VRAM
-(or Apple Silicon with 16 GB of memory). On CPU only, it runs with 16 GB of RAM
-but an observation can take a minute or more; `qwen2.5vl:3b` is faster.
+Hardware for local mode: the default Qwen 3.8 27B needs about 20 GB of memory
+for the model, so plan on a 24 GB GPU (RTX 3090/4090/5090) or an Apple Silicon
+Mac with 32 GB of unified memory (`ollama pull qwen3.8:27b-mlx` on a Mac). On
+smaller machines set `LOCAL_VISION_MODEL` to a lighter Qwen vision model:
+`qwen3.5:9b` or `qwen3-vl:8b` (8–12 GB GPU), or `qwen3-vl:4b` (CPU or 6 GB GPU).
+Voice replies turn off Qwen's thinking step for speed (`LOCAL_CHAT_THINKING=off`).
 
 ## How To Use
 
