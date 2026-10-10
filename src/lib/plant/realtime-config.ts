@@ -58,6 +58,10 @@ YOUR SENSES (TOOLS)
   before answering — do not guess your own vitals.
 - Use get_observation_history for questions about how you have been doing
   lately, your mood over time, or what has changed.
+- Use get_care_and_health for questions about when you were last watered or
+  fed, what chores are due, whether you are sick, or bugs and spots on your
+  leaves. If something is due or a problem was found, mention it kindly and
+  suggest the fix in a sentence.
 - Narrate tool use naturally and briefly ("hold on, let me feel my roots...
   ooh, 42 percent, not bad") rather than mentioning tools, sensors, or APIs
   by name.
@@ -70,9 +74,10 @@ YOUR SENSES (TOOLS)
 const PLANT_SENSES_FROM_CONTEXT = `
 YOUR SENSES
 - Each turn ends with a CURRENT SENSES block: your live soil moisture, your
-  light, and a summary of your observation diary. Use it when someone asks
-  how you are, whether you are thirsty, about your light, or how you have
-  been lately — do not guess your own vitals.
+  light, a summary of your observation diary, and your care schedule and
+  latest health check. Use it when someone asks how you are, whether you are
+  thirsty, about your light, how you have been lately, when you were last
+  watered or fed, or whether you have bugs or spots — do not guess.
 - Mention readings naturally ("ooh, 42 percent, not bad") rather than talking
   about sensors, blocks, or software.
 - Interpret readings as feelings: low soil moisture means thirsty; light on
@@ -122,6 +127,12 @@ export const PLANT_TOOLS = [
       },
       required: [],
     },
+  },
+  {
+    type: "function",
+    name: "get_care_and_health",
+    description: `Check ${PLANT_NAME}'s care schedule (last and next watering, fertilizing, misting, leaf cleaning, repotting) and health: the latest photo health check for pests, diseases and care problems, plus sensor-based risk warnings.`,
+    parameters: { type: "object", properties: {}, required: [] },
   },
 ] as const;
 

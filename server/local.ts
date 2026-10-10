@@ -23,7 +23,7 @@ const LOCAL_STT_TIMEOUT_MS = 60_000;
 
 const MAX_CHAT_MESSAGES = 24;
 const MAX_CHAT_MESSAGE_LENGTH = 2000;
-const MAX_CHAT_CONTEXT_LENGTH = 6000;
+const MAX_CHAT_CONTEXT_LENGTH = 10000;
 
 // Structured vision
 
@@ -127,6 +127,9 @@ function repairIssue(root: unknown, issue: z.core.$ZodIssue) {
     else if (typeof value === "number") container[key] = maximum;
   } else if (issue.code === "too_small" && typeof value === "number") {
     container[key] = Number(issue.minimum);
+  } else if (issue.code === "invalid_value" && issue.values.includes("other")) {
+    // An enum answer outside the allowed list, where the schema has a catch-all.
+    container[key] = "other";
   } else if (issue.code === "invalid_type") {
     const asNumber = typeof value === "string" ? Number(value) : value;
     if (typeof asNumber === "number" && Number.isFinite(asNumber)) {

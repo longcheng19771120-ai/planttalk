@@ -46,6 +46,7 @@ const MAX_UTTERANCE_MS = 20_000;
 const SENSE_CALLS = [
   { name: "get_current_sensors", args: "{}" },
   { name: "get_observation_history", args: JSON.stringify({ window: "recent" }) },
+  { name: "get_care_and_health", args: "{}" },
 ] as const;
 
 type Phase = "listening" | "thinking" | "speaking";

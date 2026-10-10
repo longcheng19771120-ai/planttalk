@@ -1,7 +1,6 @@
-import { del, get, set } from "idb-keyval";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { StateStorage } from "zustand/middleware";
+import { idbStorage } from "@/stores/plant/idb-storage";
 import type { PlantSensorReadings, PlantSensorSource } from "@/lib/plant/sensors";
 import { describeLightReading } from "@/lib/plant/sensors";
 import type { PlantObserverThought, PlantTrendDirection } from "@/lib/plant/schemas";
@@ -31,19 +30,6 @@ interface PlantObserverState {
   addObservation: (record: PlantObservationRecord) => void;
   clearObservations: () => void;
 }
-
-const idbStorage: StateStorage = {
-  getItem: async (name) => {
-    const value = await get<string>(name);
-    return value ?? null;
-  },
-  setItem: async (name, value) => {
-    await set(name, value);
-  },
-  removeItem: async (name) => {
-    await del(name);
-  },
-};
 
 // Shape of records persisted by older versions of this store (which also
 // tracked a water pump and extra sensors). The migrate step below maps them

@@ -5,4 +5,11 @@ This project is licensed under the Apache License, Version 2.0.
 
 Third-party notices:
 
-None.
+No third-party code is included. The care schedule, hydration model, and
+health features were designed with ideas from these MIT-licensed projects:
+- HortusFox, Copyright (C) 2023 - 2026 Daniel Brendel
+  https://github.com/danielbrendel/hortusfox-web
+- ha-planta, Copyright (c) 2024 Nathan Spencer
+  https://github.com/natekspencer/ha-planta
+- kiri, Copyright (c) 2026 Antonov Pavel
+  https://github.com/freislot/kiri

@@ -12,6 +12,7 @@ import { selectSensorReadings, selectUsesFallback, usePlantSensorsStore } from "
 import type { PlantSensorReadings, PlantSensorSource } from "@/lib/plant/sensors";
 import type { PlantObserverThought, PlantTrendDirection } from "@/lib/plant/schemas";
 import { usePlantCameraStore } from "@/stores/plant/camera-store";
+import { buildCareSummary, buildHardwareStatusSummary } from "@/stores/plant/plant-context";
 
 // The periodic observation loop: every N minutes (see settings-store) a camera
 // frame plus the current sensor readings are sent to the observe endpoint, the
@@ -92,7 +93,10 @@ export const useObservationLoopStore = create<ObservationLoopState>()((set, get)
       const sensorSource: PlantSensorSource = selectUsesFallback(sensorsSnapshot) ? "fallback" : "hardware";
       const observerSnapshot = usePlantObserverStore.getState();
       const selectedObservations = selectObservationsForPrompt(observerSnapshot);
-      const historySummary = summarizeObservationHistory(selectedObservations, observerSnapshot.observations);
+      // The care log rides along with the history so the observer knows when
+      // the plant was last watered or fed. It goes first because the server
+      // trims long history from the end.
+      const historySummary = `[care log] ${buildCareSummary()}\n${summarizeObservationHistory(selectedObservations, observerSnapshot.observations)}`;
       const hardwareSummary = buildHardwareStatusSummary(sensorsSnapshot);
 
       const streamedSummaryDedup = new Set<string>();
@@ -185,29 +189,6 @@ export const useObservationLoopStore = create<ObservationLoopState>()((set, get)
     }
   },
 }));
-
-// One compact line describing how much to trust the sensor data, passed into
-// the observer prompt (see PLANT_OBSERVER_PROMPTS).
-function buildHardwareStatusSummary(sensors: ReturnType<typeof usePlantSensorsStore.getState>): string {
-  if (sensors.sensorMode === "manual") {
-    return "sensor_mode=manual; sensor_data=manual_sliders";
-  }
-
-  const { connectionState, lastHardwareReadingAt } = sensors;
-  if (connectionState === "connected") {
-    // Connected but no data yet (the Arduino takes a few seconds to boot) —
-    // the readings in the prompt are still manual estimates.
-    if (lastHardwareReadingAt === null) {
-      return "arduino=connected; sensor_data=manual_sliders (awaiting first hardware reading)";
-    }
-    return "arduino=connected; sensor_data=live";
-  }
-  if (lastHardwareReadingAt !== null) {
-    const staleMin = Math.round((Date.now() - lastHardwareReadingAt) / 60000);
-    return `arduino=disconnected; last_reading=${staleMin}m ago; sensor_data=stale`;
-  }
-  return "arduino=not_connected; sensor_data=manual_sliders";
-}
 
 function extractStreamReasoningSummaryText(event: PlantObserverReasoningStreamEvent): string | null {
   if (event.type === "reasoning_summary_part_done" || event.type === "reasoning_summary_done") {

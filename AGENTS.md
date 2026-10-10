@@ -263,6 +263,11 @@ connected.
 - Add a sensor: update `arduino/PlantSensors/PlantSensors.ino`,
   `src/lib/plant/sensors.ts`, `src/stores/plant/sensors-store.ts`, and the
   Realtime tool output.
+- Change care tasks, default intervals, or the hydration model:
+  `src/lib/plant/care.ts`.
+- Change the pest and disease guide or sensor risk rules:
+  `src/lib/plant/health.ts`; the health check prompt is
+  `PLANT_HEALTH_PROMPTS` in `src/lib/plant/prompts.ts`.
 - Change Ambient mode: files in `src/components/public/`.
 - Change dashboard panels: files in `src/components/dashboard/`.
 
@@ -278,13 +283,15 @@ connected.
 - `server/realtime.ts` - mints ephemeral Realtime client secrets.
 - `server/observe.ts` - OpenAI vision calls, structured output, and reasoning
   summary streaming.
+- `server/diagnose.ts` - `/api/diagnose` photo health check (pests, diseases,
+  care problems).
 - `src/app.tsx` - single-page app entry.
 - `src/components/dashboard/` - dashboard panels.
 - `src/components/public/` - Ambient mode UI.
 - `src/lib/plant/` - prompts, schemas, Realtime config, Realtime tools, and
   shared sensor logic.
 - `src/stores/plant/` - Zustand stores for camera, sensors, observations,
-  conversation, settings, and UI mode.
+  care schedule and log, health checks, conversation, settings, and UI mode.
 - `arduino/PlantSensors/` - Arduino firmware.
 - `arduino/arduino-instructions.md` - detailed hardware tutorial.
 
