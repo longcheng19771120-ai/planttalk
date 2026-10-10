@@ -11,6 +11,7 @@ const plantAnalysisJsonContract = [
   "Use those key names exactly, include all four keys, and do not return any additional keys.",
   "Do not wrap the JSON in markdown, prose, explanations, or code fences.",
   "Do not use null, arrays, nested objects, or units inside string values.",
+  "Write physicalTexture in Simplified Chinese.",
 ].join(" ");
 
 export const PLANT_ANALYSIS_PROMPTS = {
@@ -38,13 +39,14 @@ export const PLANT_ANALYSIS_PROMPTS = {
 
 const plantObserverJsonContract = [
   "Return exactly one JSON object with these keys: observerThoughts, observation, hypothesis, trend, dryness.",
-  "observerThoughts is an array of 3 to 6 short user-visible checkpoint messages, each 18 to 120 characters.",
+  "observerThoughts is an array of 3 to 6 short user-visible checkpoint messages, each 6 to 120 characters.",
   "observerThoughts should read like a careful observer thinking out loud, each anchored in a concrete sensor reading, visual detail, or change from the history. They are presentation copy, not private chain-of-thought.",
   "observation is one neutral, empirical sentence under 160 characters recording what is visible now, compared against prior observations when present.",
   "hypothesis is one short, falsifiable statement under 120 characters about the plant's current state and likely next change.",
   "trend is one of: improving, stable, declining, insufficient-data.",
   "dryness is an integer from 1 (fully hydrated) to 10 (severely dry).",
   "Do not wrap the JSON in markdown, prose, or code fences. No null values, no extra keys.",
+  "Write observerThoughts, observation, and hypothesis in Simplified Chinese; keep the JSON keys and trend values in English.",
 ].join(" ");
 
 export const PLANT_OBSERVER_PROMPTS = {

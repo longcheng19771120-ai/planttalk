@@ -7,6 +7,7 @@ import {
   usePlantSensorsStore,
 } from "@/stores/plant/sensors-store";
 import { describeLightReading } from "@/lib/plant/sensors";
+import { lightLabel } from "@/lib/plant/labels";
 import { formatSensorValue, plantSensorFields } from "@/lib/plant/plants";
 import { actionGlyph, type ActionStatus } from "@/components/dashboard/action-glyph";
 import { ARDUINO_CHECK_INTERVAL_LIMITS, usePlantSettingsStore } from "@/stores/plant/settings-store";
@@ -44,20 +45,20 @@ export function SensorsPanel() {
     sensorMode === "manual" ? "done" : isHardwareConnected ? "done" : isConnecting ? "working" : "todo";
   const modeLabel =
     sensorMode === "manual"
-      ? "manual sliders"
+      ? "手动滑块"
       : isHardwareConnected && !usesFallback
-        ? "live Arduino feed"
-        : "Arduino mode";
+        ? "Arduino 实时数据"
+        : "Arduino 模式";
 
   return (
     <article>
       <header>
-        {actionGlyph(status)} <strong>Sensors</strong>{" "}
-        <small>({modeLabel})</small>
+        {actionGlyph(status)} <strong>传感器</strong>{" "}
+        <small>（{modeLabel}）</small>
       </header>
 
       <fieldset>
-        <legend>Sensor mode</legend>
+        <legend>传感器模式</legend>
         <label>
           <input
             type="radio"
@@ -65,7 +66,7 @@ export function SensorsPanel() {
             checked={sensorMode === "manual"}
             onChange={() => void setSensorMode("manual")}
           />
-          Manual sliders
+          手动滑块
         </label>
         <label>
           <input
@@ -74,14 +75,14 @@ export function SensorsPanel() {
             checked={sensorMode === "arduino"}
             onChange={() => void setSensorMode("arduino")}
           />
-          Arduino sensors
+          Arduino 传感器
         </label>
       </fieldset>
 
       <p>
-        Soil moisture: <strong>{Math.round(sensorReadings.moisture)}%</strong>
+        土壤湿度：<strong>{Math.round(sensorReadings.moisture)}%</strong>
         <progress value={sensorReadings.moisture} max={100} />
-        Light: <strong>{describeLightReading(sensorReadings.light)}</strong>
+        光照：<strong>{lightLabel(describeLightReading(sensorReadings.light))}</strong>
       </p>
 
       <p>
@@ -92,7 +93,7 @@ export function SensorsPanel() {
         <>
           {plantSensorFields.map((field) => (
             <label key={field.key}>
-              {field.label}: {formatSensorValue(sensorReadings[field.key], field.unit, field.step)}
+              {field.label}：{formatSensorValue(sensorReadings[field.key], field.unit, field.step)}
               <input
                 type="range"
                 min={field.min}
@@ -107,11 +108,11 @@ export function SensorsPanel() {
         </>
       ) : usesFallback ? (
         <p>
-          <small>Connect Arduino to use live readings, or switch back to Manual sliders.</small>
+          <small>连接 Arduino 以使用实时读数，或切换回手动滑块。</small>
         </p>
       ) : (
         <label>
-          Report interval: {arduinoCheckIntervalMs} ms
+          上报间隔：{arduinoCheckIntervalMs} 毫秒
           <input
             type="range"
             min={ARDUINO_CHECK_INTERVAL_LIMITS.min}
@@ -120,7 +121,7 @@ export function SensorsPanel() {
             value={arduinoCheckIntervalMs}
             onChange={(event) => applyArduinoInterval(Number(event.target.value))}
           />
-          <small>How often the Arduino emits a sensor line over serial.</small>
+          <small>Arduino 通过串口发送一次传感器数据的频率。</small>
         </label>
       )}
 
@@ -133,7 +134,7 @@ export function SensorsPanel() {
             aria-busy={isConnecting}
             onClick={isHardwareConnected ? disconnect : connect}
           >
-            {isHardwareConnected ? "Disconnect Arduino" : "Connect Arduino"}
+            {isHardwareConnected ? "断开 Arduino" : "连接 Arduino"}
           </button>
         </footer>
       )}

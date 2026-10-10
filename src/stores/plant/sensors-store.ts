@@ -165,7 +165,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
 
       console.warn("[sensors] Watchdog: no data received in", timeout, "ms — forcing reconnect");
       watchdogTimer = null;
-      void closePort("Arduino stopped responding — reconnecting...").then(() => {
+      void closePort("Arduino 无响应——正在重新连接…").then(() => {
         startReconnecting();
       });
     }, timeout);
@@ -197,9 +197,9 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
         if (openInProgress) return;
 
         stopReconnecting();
-        updateConnection("connecting", "Reconnecting to Arduino...");
+        updateConnection("connecting", "正在重新连接 Arduino…");
         try {
-          await connectToPort(ports[0], "Arduino reconnected. Reading live sensor data.");
+          await connectToPort(ports[0], "Arduino 已重新连接，正在读取实时传感器数据。");
         } catch {
           startReconnecting();
         }
@@ -261,7 +261,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
     openInProgress = true;
 
     try {
-      await closePort("Arduino sensor mode. Connect Arduino to use live readings.");
+      await closePort("Arduino 传感器模式。连接 Arduino 以使用实时读数。");
 
       try {
         await nextPort.open({ baudRate: SERIAL_BAUD_RATE });
@@ -286,7 +286,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
 
       if (!nextReader) {
         await nextPort.close();
-        throw new Error("Arduino connected without a readable serial stream.");
+        throw new Error("Arduino 已连接，但没有可读取的串口数据流。");
       }
 
       if (nextPort.writable) {
@@ -334,14 +334,14 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
           }
 
           if (!suppressAutoReconnect) {
-            updateConnection("disconnected", "Arduino stream ended — reconnecting...");
+            updateConnection("disconnected", "Arduino 数据流已结束——正在重新连接…");
             startReconnecting();
           }
         } catch (error) {
           if (isAbortError(error) || suppressAutoReconnect) {
             // User-initiated close — closePort/disconnect already set the message.
           } else {
-            updateConnection("disconnected", "Arduino connection lost — reconnecting...");
+            updateConnection("disconnected", "Arduino 连接断开——正在重新连接…");
             startReconnecting();
           }
         } finally {
@@ -379,7 +379,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
     lastHardwareReadingAt: null,
     lastFallbackAdjustmentAt: null,
     connectionState: "disconnected",
-    statusMessage: "Manual sensor mode. Adjust the sliders or switch to Arduino sensors.",
+    statusMessage: "手动传感器模式。调整滑块，或切换到 Arduino 传感器。",
 
     setSensorMode: async (mode) => {
       setStoredSensorMode(mode);
@@ -387,28 +387,28 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
       if (mode === "manual") {
         suppressAutoReconnect = true;
         stopReconnecting();
-        await closePort("Manual sensor mode. Adjust the sliders to set plant readings.");
+        await closePort("手动传感器模式。调整滑块来设置植物读数。");
         return;
       }
 
       const serial = getSerialApi();
 
       if (!serial) {
-        updateConnection("unsupported", "Arduino sensor mode needs Chrome or Edge with Web Serial support.");
+        updateConnection("unsupported", "Arduino 传感器模式需要支持 Web Serial 的 Chrome 或 Edge。");
         return;
       }
 
       suppressAutoReconnect = false;
-      updateConnection("disconnected", "Arduino sensor mode. Connect Arduino to use live readings.");
+      updateConnection("disconnected", "Arduino 传感器模式。连接 Arduino 以使用实时读数。");
 
       try {
         const rememberedPorts = (await serial.getPorts?.()) ?? [];
         if (rememberedPorts.length > 0) {
-          updateConnection("connecting", "Reconnecting to remembered Arduino...");
-          await connectToPort(rememberedPorts[0], "Arduino reconnected. Reading live sensor data.");
+          updateConnection("connecting", "正在重新连接已记住的 Arduino…");
+          await connectToPort(rememberedPorts[0], "Arduino 已重新连接，正在读取实时传感器数据。");
         }
       } catch {
-        updateConnection("disconnected", "Arduino sensor mode. Connect Arduino to use live readings.");
+        updateConnection("disconnected", "Arduino 传感器模式。连接 Arduino 以使用实时读数。");
       }
     },
 
@@ -428,27 +428,27 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
       setStoredSensorMode("arduino");
 
       if (!serial) {
-        updateConnection("unsupported", "Arduino sensor mode needs Chrome or Edge with Web Serial support.");
+        updateConnection("unsupported", "Arduino 传感器模式需要支持 Web Serial 的 Chrome 或 Edge。");
         return;
       }
 
       // An explicit connect clears any prior manual-disconnect suppression.
       suppressAutoReconnect = false;
       stopReconnecting();
-      updateConnection("connecting", "Waiting for Arduino serial permission...");
+      updateConnection("connecting", "等待 Arduino 串口授权…");
 
       try {
         const nextPort = await serial.requestPort();
-        await connectToPort(nextPort, "Arduino connected. Reading live sensor data.");
+        await connectToPort(nextPort, "Arduino 已连接，正在读取实时传感器数据。");
       } catch (error) {
         if (isAbortError(error)) {
-          updateConnection("disconnected", "Arduino selection cancelled. Switch to manual mode or try again.");
+          updateConnection("disconnected", "已取消选择 Arduino。请切换到手动模式或重试。");
           return;
         }
 
         updateConnection(
           "disconnected",
-          error instanceof Error ? error.message : "Unable to connect to Arduino. Switch to manual mode or try again.",
+          error instanceof Error ? error.message : "无法连接 Arduino。请切换到手动模式或重试。",
         );
       }
     },
@@ -457,7 +457,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
       // Honor the user's intent: stay disconnected until they connect again.
       suppressAutoReconnect = true;
       stopReconnecting();
-      await closePort("Arduino disconnected. Switch to manual mode or reconnect Arduino.");
+      await closePort("Arduino 已断开。请切换到手动模式或重新连接 Arduino。");
     },
 
     sendCommand: sendSerialCommand,
@@ -466,15 +466,15 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
       const serial = getSerialApi();
 
       if (!serial) {
-        updateConnection("unsupported", "Manual sensor mode works here. Arduino mode needs Chrome or Edge.");
+        updateConnection("unsupported", "此处可用手动传感器模式。Arduino 模式需要 Chrome 或 Edge。");
         return;
       }
 
       updateConnection(
         "disconnected",
         isArduinoMode()
-          ? "Arduino sensor mode. Connect Arduino to use live readings."
-          : "Manual sensor mode. Adjust the sliders or switch to Arduino sensors.",
+          ? "Arduino 传感器模式。连接 Arduino 以使用实时读数。"
+          : "手动传感器模式。调整滑块，或切换到 Arduino 传感器。",
       );
 
       serial.addEventListener?.("connect", () => {
@@ -486,11 +486,11 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
           if (ports.length === 0) return;
 
           stopReconnecting();
-          updateConnection("connecting", "USB device detected — connecting...");
+          updateConnection("connecting", "检测到 USB 设备——正在连接…");
           try {
-            await connectToPort(ports[0], "Arduino connected. Reading live sensor data.");
+            await connectToPort(ports[0], "Arduino 已连接，正在读取实时传感器数据。");
           } catch {
-            updateConnection("disconnected", "Arduino sensor mode. Connect Arduino to use live readings.");
+            updateConnection("disconnected", "Arduino 传感器模式。连接 Arduino 以使用实时读数。");
           }
         })();
       });
@@ -499,7 +499,7 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
         // The read loop will detect the failure and start reconnecting.
         // Update the status immediately so the UI reflects the drop.
         if (port) {
-          updateConnection("disconnected", "Arduino disconnected — reconnecting...");
+          updateConnection("disconnected", "Arduino 已断开——正在重新连接…");
         }
       });
 
@@ -512,17 +512,17 @@ export const usePlantSensorsStore = create<PlantSensorsState>()((set) => {
           if (rememberedPorts.length === 0) return;
 
           const rememberedPort = rememberedPorts[0];
-          updateConnection("connecting", "Reconnecting to remembered Arduino...");
-          await connectToPort(rememberedPort, "Arduino reconnected. Reading live sensor data.");
+          updateConnection("connecting", "正在重新连接已记住的 Arduino…");
+          await connectToPort(rememberedPort, "Arduino 已重新连接，正在读取实时传感器数据。");
         } catch {
-          updateConnection("disconnected", "Arduino sensor mode. Connect Arduino to use live readings.");
+          updateConnection("disconnected", "Arduino 传感器模式。连接 Arduino 以使用实时读数。");
         }
       })();
     },
 
     cleanup: async () => {
       stopReconnecting();
-      await closePort("Arduino disconnected.");
+      await closePort("Arduino 已断开。");
     },
   };
 });
@@ -677,15 +677,15 @@ function describeOpenError(error: unknown): Error {
 
   if (looksBusy) {
     return new Error(
-      "Couldn't open the Arduino — the port is already in use. Close any other browser tab " +
-        "running this app, and quit the Arduino IDE Serial Monitor or any other serial program, then try again.",
+      "无法打开 Arduino——串口已被占用。请关闭运行此应用的其他浏览器标签页，" +
+        "并退出 Arduino IDE 串口监视器或其他串口程序，然后重试。",
     );
   }
 
   return new Error(
     rawMessage
-      ? `Couldn't open the Arduino: ${rawMessage}`
-      : "Couldn't open the Arduino. Check the cable and try again, or switch to Manual sliders.",
+      ? `无法打开 Arduino：${rawMessage}`
+      : "无法打开 Arduino。请检查数据线后重试，或切换到手动滑块。",
   );
 }
 

@@ -12,13 +12,12 @@ export function App() {
   return (
     <>
       <header className="container">
-        <h1>Talk to {PLANT_NAME} 🪴</h1>
+        <h1>和{PLANT_NAME}聊天 🪴</h1>
         <p>
-          A houseplant with sensors, a camera, a memory, and opinions - powered by local models or the OpenAI API. This dashboard shows
-          everything the system is doing.
+          一盆有传感器、摄像头、记忆和主见的盆栽——由本地模型或 OpenAI API 驱动。这个面板展示系统正在做的一切。
         </p>
         <button type="button" className="secondary outline" onClick={() => setMode("ambient")}>
-          Open ambient mode
+          打开沉浸模式
         </button>
       </header>
       <main>

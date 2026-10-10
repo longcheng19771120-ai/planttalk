@@ -11,10 +11,10 @@ interface IntroViewProps {
 }
 
 function getIdleLine(moisture: number, light: number): string {
-  if (moisture < 25) return "I'm a little thirsty - but hi, let's chat!";
-  if (moisture < 45) return "Oh, hello! What should we talk about?";
-  if (light <= 50) return "Mmm, dim and cozy. Talk to me.";
-  return "Feeling lush today - say hi!";
+  if (moisture < 25) return "我有点渴了——不过你好呀，来聊聊吧！";
+  if (moisture < 45) return "哦，你好！我们聊点什么呢？";
+  if (light <= 50) return "嗯，光线昏暗又舒服。跟我说说话吧。";
+  return "今天感觉枝繁叶茂——来打个招呼吧！";
 }
 
 export function IntroView({ onBack }: IntroViewProps) {
@@ -56,12 +56,12 @@ export function IntroView({ onBack }: IntroViewProps) {
   }, [status, isActive]);
 
   const isConnected = status === "connected";
-  // The light sensor is binary; the client shows it as Room Brightness High/Low.
-  const brightnessLabel = describeLightReading(readings.light) === "on" ? "High" : "Low";
+  // The light sensor is binary; the client shows it as 室内亮度 高/低.
+  const brightnessLabel = describeLightReading(readings.light) === "on" ? "高" : "低";
 
   const speaking = isConnected && !!lastPlantLine;
   const idleLine =
-    errorMessage ?? (isConnected ? getIdleLine(readings.moisture, readings.light) : "Connecting voice chat...");
+    errorMessage ?? (isConnected ? getIdleLine(readings.moisture, readings.light) : "正在连接语音聊天…");
 
   return (
     <div className="public-experience__intro">
@@ -81,11 +81,11 @@ export function IntroView({ onBack }: IntroViewProps) {
 
       <div className="public-experience__stats">
         <div className="public-experience__stat">
-          <span className="public-experience__stat-label">Soil Moisture</span>
+          <span className="public-experience__stat-label">土壤湿度</span>
           <NumberCounter className="public-experience__stat-value" value={readings.moisture} suffix="%" />
         </div>
         <div className="public-experience__stat">
-          <span className="public-experience__stat-label">Room Brightness</span>
+          <span className="public-experience__stat-label">室内亮度</span>
           <span className="public-experience__stat-value">{brightnessLabel}</span>
         </div>
       </div>

@@ -39,7 +39,7 @@ export const useMicrophoneStore = create<MicrophoneState>()((set) => ({
         .filter((device) => device.kind === "audioinput" && device.deviceId)
         .map((device, index) => ({
           deviceId: device.deviceId,
-          label: device.label || `Microphone ${index + 1}`,
+          label: device.label || `麦克风 ${index + 1}`,
         }));
       set({ availableMicrophones: microphones });
     } catch (error) {

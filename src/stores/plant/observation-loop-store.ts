@@ -51,7 +51,7 @@ interface ObservationLoopState {
 export const useObservationLoopStore = create<ObservationLoopState>()((set, get) => ({
   latestObservation: null,
   reasoningLog: [],
-  modelLabel: "Awaiting first observation",
+  modelLabel: "等待第一次观察",
   errorMessage: null,
   isSubmitting: false,
   autoUpdatesEnabled: false,
@@ -151,8 +151,8 @@ export const useObservationLoopStore = create<ObservationLoopState>()((set, get)
         error instanceof Error
           ? error.message
           : source === "auto"
-            ? "Automatic plant update failed."
-            : "Plant update failed.";
+            ? "自动观察失败。"
+            : "观察失败。";
 
       // Detect rate-limit errors and apply exponential backoff so the loop
       // doesn't hammer the API when it's already saying "slow down".

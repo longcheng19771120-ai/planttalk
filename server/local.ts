@@ -198,7 +198,7 @@ export async function handleLocalChatRequest(req: Request, res: Response) {
     res.json({ reply, model: LOCAL_CHAT_MODEL });
   } catch (error) {
     console.error("Local chat error:", error);
-    res.status(502).json({ error: describeLocalError(error, "Failed to get a reply from the local model.") });
+    res.status(502).json({ error: describeLocalError(error, "未能从本地模型获得回复。") });
   }
 }
 
@@ -250,7 +250,7 @@ export async function handleLocalTranscribeRequest(req: Request, res: Response) 
     res.json({ text: transcription.text.trim() });
   } catch (error) {
     console.error("Local transcription error:", error);
-    res.status(502).json({ error: describeLocalError(error, "Failed to transcribe speech locally.") });
+    res.status(502).json({ error: describeLocalError(error, "本地语音转写失败。") });
   }
 }
 

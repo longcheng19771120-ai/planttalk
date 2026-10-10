@@ -130,7 +130,7 @@ export class LocalVoiceConnection implements VoiceConnection {
       if (this.options.speechRecognition === "browser") {
         this.recognition = this.createRecognition();
       } else if (typeof MediaRecorder === "undefined") {
-        throw new Error("This browser cannot record audio for local speech recognition. Use Chrome or Edge.");
+        throw new Error("此浏览器无法为本地语音识别录音。请使用 Chrome 或 Edge。");
       }
 
       // Voices load asynchronously in Chrome; ask early so they're ready.
@@ -143,10 +143,10 @@ export class LocalVoiceConnection implements VoiceConnection {
       if (this.cancelled) return this.releaseResources();
       const message =
         error instanceof DOMException && error.name === "NotAllowedError"
-          ? "Microphone access was denied. Allow the mic to talk to the plant."
+          ? "麦克风权限被拒绝。请允许使用麦克风来和植物聊天。"
           : error instanceof Error
             ? error.message
-            : "Failed to start the voice conversation.";
+            : "无法开始语音对话。";
       this.fail(message);
     }
   }
@@ -200,14 +200,14 @@ export class LocalVoiceConnection implements VoiceConnection {
       (window as WindowWithSpeech).SpeechRecognition ?? (window as WindowWithSpeech).webkitSpeechRecognition;
     if (!Recognition) {
       throw new Error(
-        "This browser has no built-in speech recognition. Use Chrome or Edge, or set LOCAL_STT_BASE_URL to a local Whisper server.",
+        "此浏览器没有内置语音识别。请使用 Chrome 或 Edge，或将 LOCAL_STT_BASE_URL 设置为本地 Whisper 服务器。",
       );
     }
 
     const recognition = new Recognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = navigator.language || "en-US";
+    recognition.lang = "zh-CN";
 
     recognition.onspeechstart = () => {
       this.resetIdleTimer();
@@ -241,15 +241,15 @@ export class LocalVoiceConnection implements VoiceConnection {
     recognition.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return;
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        this.fail("Microphone or speech recognition access was denied in the browser.");
+        this.fail("浏览器拒绝了麦克风或语音识别权限。");
       } else if (event.error === "network") {
         this.fail(
-          "The browser's speech recognition could not reach its online service (Chrome and Edge recognize speech in the cloud). For fully offline speech, set LOCAL_STT_BASE_URL to a local Whisper server.",
+          "浏览器的语音识别无法连接其在线服务（Chrome 和 Edge 在云端识别语音）。如需完全离线的语音识别，请将 LOCAL_STT_BASE_URL 设置为本地 Whisper 服务器。",
         );
       } else if (event.error === "language-not-supported") {
-        this.fail(`The browser cannot recognize speech in ${recognition.lang}.`);
+        this.fail(`浏览器无法识别 ${recognition.lang} 语音。`);
       } else {
-        this.callbacks.onError(`Speech recognition error: ${event.error}`);
+        this.callbacks.onError(`语音识别出错：${event.error}`);
       }
     };
 
@@ -343,7 +343,7 @@ export class LocalVoiceConnection implements VoiceConnection {
         signal: this.requestController.signal,
       });
       const data = (await response.json().catch(() => null)) as { text?: string; error?: string } | null;
-      if (!response.ok) throw new Error(data?.error ?? `Transcription failed (HTTP ${response.status}).`);
+      if (!response.ok) throw new Error(data?.error ?? `语音转写失败（HTTP ${response.status}）。`);
       if (this.cancelled) return;
       const text = data?.text?.trim();
       if (text) {
@@ -352,7 +352,7 @@ export class LocalVoiceConnection implements VoiceConnection {
       }
     } catch (error) {
       if (this.cancelled) return;
-      this.callbacks.onError(error instanceof Error ? error.message : "Transcription failed.");
+      this.callbacks.onError(error instanceof Error ? error.message : "语音转写失败。");
     }
     if (!this.cancelled) {
       this.resetIdleTimer();
@@ -384,7 +384,7 @@ export class LocalVoiceConnection implements VoiceConnection {
       });
       const data = (await response.json().catch(() => null)) as { reply?: string; error?: string } | null;
       if (!response.ok || !data?.reply) {
-        throw new Error(data?.error ?? `The local model did not answer (HTTP ${response.status}).`);
+        throw new Error(data?.error ?? `本地模型没有回答（HTTP ${response.status}）。`);
       }
       if (this.cancelled) return;
 
@@ -396,7 +396,7 @@ export class LocalVoiceConnection implements VoiceConnection {
       if (this.cancelled) return;
       // Drop the unanswered question so user/assistant turns stay paired.
       if (this.history[this.history.length - 1]?.role === "user") this.history.pop();
-      this.callbacks.onError(error instanceof Error ? error.message : "The local model did not answer.");
+      this.callbacks.onError(error instanceof Error ? error.message : "本地模型没有回答。");
     } finally {
       if (!this.cancelled) {
         this.resetIdleTimer();
@@ -471,7 +471,7 @@ export class LocalVoiceConnection implements VoiceConnection {
   private resetIdleTimer() {
     this.pauseIdleTimer();
     this.idleTimer = setTimeout(() => {
-      this.disconnect("Ended after 90 seconds of silence. Tap to start again.");
+      this.disconnect("静默 90 秒后已结束。点击重新开始。");
     }, IDLE_TIMEOUT_MS);
   }
 

@@ -21,13 +21,12 @@ export function PlantAnalysisPanel() {
   return (
     <article>
       <header>
-        <strong>Structured plant analysis</strong>
+        <strong>结构化植物分析</strong>
       </header>
 
       <p>
         <small>
-          The model is forced to reply with this exact JSON shape via a zod schema (<code>zodTextFormat</code>), so the
-          output can be used directly — no text parsing.
+          模型通过 zod 模式（<code>zodTextFormat</code>）被强制按这个 JSON 结构回答，因此输出可直接使用，无需解析文本。
         </small>
       </p>
 
@@ -39,31 +38,31 @@ export function PlantAnalysisPanel() {
         <table>
           <thead>
             <tr>
-              <th>Attribute</th>
-              <th>Value</th>
-              <th>Scale</th>
+              <th>属性</th>
+              <th>数值</th>
+              <th>刻度</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Dryness</td>
+              <td>干燥度</td>
               <td>{analysis ? analysis.dryness : "--"}</td>
-              <td>1 hydrated – 10 dry</td>
+              <td>1 水润 – 10 干燥</td>
             </tr>
             <tr>
-              <td>Size</td>
-              <td>{analysis ? `${analysis.size} mm` : "--"}</td>
-              <td>estimated visible span</td>
+              <td>尺寸</td>
+              <td>{analysis ? `${analysis.size} 毫米` : "--"}</td>
+              <td>估计的可见跨度</td>
             </tr>
             <tr>
-              <td>Branching</td>
+              <td>分枝</td>
               <td>{analysis ? analysis.branching : "--"}</td>
-              <td>0 sparse – 10 dense</td>
+              <td>0 稀疏 – 10 茂密</td>
             </tr>
             <tr>
-              <td>Physical texture</td>
+              <td>表面质感</td>
               <td>{analysis ? analysis.physicalTexture : "--"}</td>
-              <td>surface read from image</td>
+              <td>从照片判断的表面</td>
             </tr>
           </tbody>
         </table>

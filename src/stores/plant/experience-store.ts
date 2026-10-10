@@ -20,7 +20,7 @@ export const usePlantExperienceStore = create<PlantExperienceState>()(
     imageFile: null,
     previewUrl: null,
     analysis: null,
-    modelLabel: "Awaiting plant image",
+    modelLabel: "等待植物照片",
     errorMessage: null,
     isSubmitting: false,
 
@@ -35,7 +35,7 @@ export const usePlantExperienceStore = create<PlantExperienceState>()(
         previewUrl: file ? URL.createObjectURL(file) : null,
         analysis: null,
         errorMessage: null,
-        modelLabel: "Awaiting plant image",
+        modelLabel: "等待植物照片",
       });
     },
 
@@ -53,7 +53,7 @@ export const usePlantExperienceStore = create<PlantExperienceState>()(
           errorMessage:
             error instanceof Error
               ? error.message
-              : "Plant analysis failed",
+              : "植物分析失败",
         });
       } finally {
         set({ isSubmitting: false });
@@ -70,7 +70,7 @@ export const usePlantExperienceStore = create<PlantExperienceState>()(
         imageFile: null,
         previewUrl: null,
         analysis: null,
-        modelLabel: "Awaiting plant image",
+        modelLabel: "等待植物照片",
         errorMessage: null,
         isSubmitting: false,
       });

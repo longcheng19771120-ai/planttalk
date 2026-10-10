@@ -6,24 +6,24 @@ import { selectUsesFallback, usePlantSensorsStore } from "@/stores/plant/sensors
 //   ✅ healthy/ready   ⏳ waiting/working   🎚️ manual sliders
 //   💤 idle/not started   ⚠️ unsupported   ❌ error/offline
 function serialStatus(state: string): [string, string] {
-  if (state === "connected") return ["✅", "connected"];
-  if (state === "connecting") return ["⏳", "connecting…"];
-  if (state === "unsupported") return ["⚠️", "Web Serial not supported"];
-  return ["🎚️", "disconnected"];
+  if (state === "connected") return ["✅", "已连接"];
+  if (state === "connecting") return ["⏳", "连接中…"];
+  if (state === "unsupported") return ["⚠️", "不支持 Web Serial"];
+  return ["🎚️", "未连接"];
 }
 
 function cameraStatusGlyph(status: LiveCameraStatus): [string, string] {
   switch (status) {
     case "ready":
-      return ["✅", "ready"];
+      return ["✅", "就绪"];
     case "starting":
-      return ["⏳", "starting…"];
+      return ["⏳", "启动中…"];
     case "error":
-      return ["❌", "error"];
+      return ["❌", "出错"];
     case "unsupported":
-      return ["⚠️", "not supported"];
+      return ["⚠️", "不支持"];
     default:
-      return ["💤", "idle"];
+      return ["💤", "空闲"];
   }
 }
 
@@ -44,59 +44,59 @@ export function DebugPanel() {
   const online = typeof navigator !== "undefined" && navigator.onLine;
 
   const [apiGlyph, apiLabel] = isSubmitting
-    ? ["⏳", "observing…"]
+    ? ["⏳", "观察中…"]
     : observeError
       ? ["❌", observeError]
       : lastUpdatedAt
-        ? ["✅", `${modelLabel} at ${lastUpdatedAt.toLocaleTimeString()}`]
+        ? ["✅", `${modelLabel}，${lastUpdatedAt.toLocaleTimeString()}`]
         : ["💤", modelLabel];
 
   return (
     <article>
       <header>
-        <strong>Debug</strong>
+        <strong>调试</strong>
       </header>
 
       <table>
         <tbody>
           <tr>
-            <td>Serial connection</td>
+            <td>串口连接</td>
             <td>
               {serialGlyph} {serialLabel}
               {lastHardwareReadingAt && (
-                <small> (last reading {new Date(lastHardwareReadingAt).toLocaleTimeString()})</small>
+                <small> （上次读数 {new Date(lastHardwareReadingAt).toLocaleTimeString()}）</small>
               )}
             </td>
           </tr>
           <tr>
-            <td>Sensor source</td>
+            <td>传感器来源</td>
             <td>
               {usesFallback
                 ? sensorMode === "arduino"
-                  ? "⏳ Arduino selected, waiting for live readings"
-                  : "🎚️ manual sliders"
-                : "🔌 live Arduino"}
+                  ? "⏳ 已选 Arduino，等待实时读数"
+                  : "🎚️ 手动滑块"
+                : "🔌 Arduino 实时"}
             </td>
           </tr>
           <tr>
-            <td>Camera</td>
+            <td>摄像头</td>
             <td>
               {camGlyph} {camLabel}
             </td>
           </tr>
           <tr>
-            <td>Last API call</td>
+            <td>上次 API 调用</td>
             <td>
               {apiGlyph}{" "}
               <small>{apiLabel}</small>
             </td>
           </tr>
           <tr>
-            <td>Network</td>
-            <td>{online ? "✅ online" : "❌ offline"}</td>
+            <td>网络</td>
+            <td>{online ? "✅ 在线" : "❌ 离线"}</td>
           </tr>
           <tr>
-            <td>Serial status</td>
+            <td>串口状态</td>
             <td>
               <small>{statusMessage}</small>
             </td>

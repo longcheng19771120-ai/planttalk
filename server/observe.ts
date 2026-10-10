@@ -52,7 +52,7 @@ export async function handleAnalyzeRequest(req: Request, res: Response) {
       res.json({ analysis, model: `${localModelLabel} structured vision` });
     } catch (error) {
       console.error("Local plant analysis error:", error);
-      res.status(502).json({ error: describeLocalError(error, "Failed to analyze the plant image.") });
+      res.status(502).json({ error: describeLocalError(error, "植物照片分析失败。") });
     }
     return;
   }
@@ -94,7 +94,7 @@ export async function handleAnalyzeRequest(req: Request, res: Response) {
     });
   } catch (error) {
     console.error("Plant analysis error:", error);
-    res.status(500).json({ error: "Failed to analyze the plant image." });
+    res.status(500).json({ error: "植物照片分析失败。" });
   }
 }
 
@@ -185,7 +185,7 @@ export async function handleObserveRequest(req: Request, res: Response) {
     res.json(payload);
   } catch (error) {
     console.error("Plant observation error:", error);
-    res.status(500).json({ error: "Failed to observe the plant." });
+    res.status(500).json({ error: "植物观察失败。" });
   }
 }
 
@@ -237,7 +237,7 @@ async function observeWithLocalModel({
     }
   } catch (error) {
     console.error("Local plant observation error:", error);
-    const message = describeLocalError(error, "Failed to observe the plant.");
+    const message = describeLocalError(error, "植物观察失败。");
     if (shouldStream) {
       send({ type: "error", error: message, code: null, retryable: false });
       res.end();
