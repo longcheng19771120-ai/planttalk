@@ -1,15 +1,19 @@
 import { create } from "zustand";
 import {
   RealtimeVoiceConnection,
+  type RealtimeConnectionCallbacks,
   type RealtimeConnectionStatus,
 } from "@/lib/plant/realtime-connection";
+import { LocalVoiceConnection, type VoiceConnection } from "@/lib/plant/local-voice-connection";
 import { executePlantTool } from "@/lib/plant/realtime-tools";
+import { useAiConfigStore } from "@/stores/plant/ai-config-store";
 import { useMicrophoneStore } from "@/stores/plant/microphone-store";
 import { PLANT_VOICE } from "@/lib/plant/realtime-config";
 
 const SELECTED_VOICE_STORAGE_KEY = "plant-voice/selected";
 
-// Thin reactive wrapper around RealtimeVoiceConnection. The connection object
+// Thin reactive wrapper around the voice connection: RealtimeVoiceConnection
+// with OpenAI, LocalVoiceConnection with local models. The connection object
 // itself is held in a closure (it is not renderable state); only things the
 // dashboard draws — status, transcript, tool activity — go through set().
 
@@ -57,7 +61,7 @@ interface ConversationState {
 }
 
 export const useConversationStore = create<ConversationState>()((set, get) => {
-  let connection: RealtimeVoiceConnection | null = null;
+  let connection: VoiceConnection | null = null;
 
   // Transcript entries stream in as deltas keyed by the conversation item id;
   // upsert so each utterance grows in place instead of duplicating. Final
@@ -99,62 +103,76 @@ export const useConversationStore = create<ConversationState>()((set, get) => {
 
       set({ errorMessage: null, statusDetail: null, isMuted: false });
 
-      connection = new RealtimeVoiceConnection(
-        {
-          onStatusChange: (status, detail) => {
-            set({ status, statusDetail: detail ?? null });
-            if (status === "connected") {
-              // Mic permission was just granted — device labels are now
-              // available for the microphone dropdown.
-              void useMicrophoneStore.getState().refreshMicrophoneList();
-            }
-            if (status === "disconnected" || status === "error") {
-              connection = null;
-              set({ isUserSpeaking: false, isPlantSpeaking: false });
-            }
-          },
-
-          onUserTranscript: (itemId, text, isFinal) => upsertTranscript(itemId, "user", text, isFinal),
-          onModelTranscript: (itemId, delta, isFinal) => upsertTranscript(itemId, "plant", delta, isFinal),
-
-          onToolCall: async ({ callId, name, args }) => {
-            set((state) => ({
-              toolActivity: [
-                ...state.toolActivity,
-                { callId, name, args, result: null, at: Date.now() },
-              ].slice(-MAX_TOOL_ACTIVITY_ENTRIES),
-            }));
-            return executePlantTool(name, args);
-          },
-
-          onToolResult: (callId, _name, output) => {
-            set((state) => ({
-              toolActivity: state.toolActivity.map((entry) =>
-                entry.callId === callId ? { ...entry, result: output } : entry,
-              ),
-            }));
-          },
-
-          onSpeechActivity: (kind) => {
-            if (kind === "user-start") set({ isUserSpeaking: true });
-            if (kind === "user-stop") set({ isUserSpeaking: false });
-            if (kind === "model-start") set({ isPlantSpeaking: true });
-            if (kind === "model-stop") set({ isPlantSpeaking: false });
-          },
-
-          onServerEvent: (eventType) => {
-            set((state) => ({
-              debugEvents: [...state.debugEvents, { type: eventType, at: Date.now() }].slice(-MAX_DEBUG_EVENTS),
-            }));
-          },
-
-          onError: (message) => set({ errorMessage: message }),
+      const callbacks: RealtimeConnectionCallbacks = {
+        onStatusChange: (status, detail) => {
+          set({ status, statusDetail: detail ?? null });
+          if (status === "connected") {
+            // Mic permission was just granted — device labels are now
+            // available for the microphone dropdown.
+            void useMicrophoneStore.getState().refreshMicrophoneList();
+          }
+          if (status === "disconnected" || status === "error") {
+            connection = null;
+            set({ isUserSpeaking: false, isPlantSpeaking: false });
+          }
         },
-        // Mic and voice are read at call time — change either, then start a call.
-        { micDeviceId: useMicrophoneStore.getState().selectedMicrophoneId, voice: get().selectedVoice },
-      );
 
-      await connection.connect();
+        onUserTranscript: (itemId, text, isFinal) => upsertTranscript(itemId, "user", text, isFinal),
+        onModelTranscript: (itemId, delta, isFinal) => upsertTranscript(itemId, "plant", delta, isFinal),
+
+        onToolCall: async ({ callId, name, args }) => {
+          set((state) => ({
+            toolActivity: [
+              ...state.toolActivity,
+              { callId, name, args, result: null, at: Date.now() },
+            ].slice(-MAX_TOOL_ACTIVITY_ENTRIES),
+          }));
+          return executePlantTool(name, args);
+        },
+
+        onToolResult: (callId, _name, output) => {
+          set((state) => ({
+            toolActivity: state.toolActivity.map((entry) =>
+              entry.callId === callId ? { ...entry, result: output } : entry,
+            ),
+          }));
+        },
+
+        onSpeechActivity: (kind) => {
+          if (kind === "user-start") set({ isUserSpeaking: true });
+          if (kind === "user-stop") set({ isUserSpeaking: false });
+          if (kind === "model-start") set({ isPlantSpeaking: true });
+          if (kind === "model-stop") set({ isPlantSpeaking: false });
+        },
+
+        onServerEvent: (eventType) => {
+          set((state) => ({
+            debugEvents: [...state.debugEvents, { type: eventType, at: Date.now() }].slice(-MAX_DEBUG_EVENTS),
+          }));
+        },
+
+        onError: (message) => set({ errorMessage: message }),
+      };
+
+      // Mic and voice are read at call time — change either, then start a call.
+      const micDeviceId = useMicrophoneStore.getState().selectedMicrophoneId;
+      const voice = get().selectedVoice;
+
+      // Create the connection synchronously, still inside the click gesture
+      // (audio playback permission), using the config if it's already loaded.
+      const aiConfig = useAiConfigStore.getState();
+      if (!aiConfig.isLoaded) void aiConfig.load();
+      const nextConnection: VoiceConnection =
+        aiConfig.provider === "openai"
+          ? new RealtimeVoiceConnection(callbacks, { micDeviceId, voice })
+          : new LocalVoiceConnection(callbacks, {
+              micDeviceId,
+              voice,
+              speechRecognition: aiConfig.speechRecognition,
+            });
+      connection = nextConnection;
+
+      await nextConnection.connect();
     },
 
     disconnect: () => {

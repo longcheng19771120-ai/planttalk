@@ -17,7 +17,9 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
+    // Localhost only: the API behind this proxy has no login. Browsers also
+    // only allow camera, microphone and Web Serial on localhost or HTTPS.
+    host: "localhost",
     port: 3000,
     // API requests go to the Express server (server/index.ts) during development.
     // Target 127.0.0.1 (not "localhost") so Node doesn't attempt a dual-stack

@@ -14,7 +14,7 @@ export function App() {
       <header className="container">
         <h1>Talk to {PLANT_NAME} 🪴</h1>
         <p>
-          A houseplant with sensors, a camera, a memory, and opinions - powered by the OpenAI API. This dashboard shows
+          A houseplant with sensors, a camera, a memory, and opinions - powered by local models or the OpenAI API. This dashboard shows
           everything the system is doing.
         </p>
         <button type="button" className="secondary outline" onClick={() => setMode("ambient")}>

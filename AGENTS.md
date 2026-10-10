@@ -106,10 +106,14 @@ voice loop before hardware is involved.
    npm run setup
    ```
 
-   Success: Node is accepted and `.env` exists. If the helper says OpenAI API
-   access still needs to be added, guide the user through the next step.
+   Success: Node is accepted and `.env` exists. With the default
+   `AI_PROVIDER=local`, the helper also checks that Ollama is reachable and the
+   model is downloaded; if not, have the user install Ollama from
+   `https://ollama.com` and run the `ollama pull` command it prints, then run
+   setup again and skip step 4. If the user prefers OpenAI, set
+   `AI_PROVIDER=openai` in `.env` and continue with step 4.
 
-4. Help the user add API access locally.
+4. OpenAI mode only: help the user add API access locally.
 
    - If they already have an OpenAI API key, tell them to open `.env` and
      replace `replace-me` with that key.
@@ -206,8 +210,11 @@ the user through it step by step instead of telling them to read the whole file.
    Success: JSON appears about once per second, for example:
 
    ```json
-   {"moisture":45,"light":100}
+   {"moisture":0.45,"light":1.00}
    ```
+
+   The firmware sends fractions from 0 to 1; the dashboard shows them as
+   percentages.
 
 7. Calibrate soil moisture using the `calibrate` command and the instructions
    in `arduino/arduino-instructions.md`.
@@ -248,6 +255,8 @@ connected.
   `src/lib/plant/realtime-config.ts`.
 - Change Realtime model: `REALTIME_MODEL` in
   `src/lib/plant/realtime-config.ts`.
+- Switch between local models and OpenAI, or change local models:
+  `AI_PROVIDER`, `LOCAL_VISION_MODEL`, `LOCAL_CHAT_MODEL` in `.env`.
 - Change observation model or reasoning settings: `server/observe.ts`.
 - Add a conversation tool: declare it in `PLANT_TOOLS` and implement it in
   `src/lib/plant/realtime-tools.ts`.
@@ -259,7 +268,13 @@ connected.
 
 ## Repo Map
 
-- `server/` - Express backend. This is the only place `OPENAI_API_KEY` is used.
+- `server/` - Express backend. This is the only place `OPENAI_API_KEY` or the
+  local model server address is used. Binds to `127.0.0.1` unless `HOST` is set.
+- `server/ai-config.ts` - `AI_PROVIDER` switch and local model settings.
+- `server/local.ts` - local vision, chat (`/api/chat`) and speech-to-text
+  (`/api/transcribe`) through OpenAI-compatible endpoints.
+- `src/lib/plant/local-voice-connection.ts` - local voice loop (speech
+  recognition, local chat model, browser speech synthesis).
 - `server/realtime.ts` - mints ephemeral Realtime client secrets.
 - `server/observe.ts` - OpenAI vision calls, structured output, and reasoning
   summary streaming.
@@ -286,6 +301,14 @@ connected.
 ## Troubleshooting Priorities
 
 Check the common failures first:
+
+- `The local model server is not reachable`: start Ollama (or the server in
+  `LOCAL_LLM_BASE_URL`) and confirm `ollama list` shows the model.
+- `The model was not found`: run `ollama pull <LOCAL_VISION_MODEL>`.
+- Local observations are slow: use `qwen2.5vl:3b` or raise the interval.
+- Voice says speech recognition could not reach its online service: the
+  browser's built-in recognition needs internet; set `LOCAL_STT_BASE_URL` to a
+  local Whisper server for offline use.
 
 - `OpenAI setup is not complete yet`: run `npm run setup`, then guide the user
   through local API access setup without asking them to paste the key into chat.

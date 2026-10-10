@@ -43,6 +43,49 @@ For the sensing part of the system, you'll also need:
 
 ![Codex prompt for building Plant Talk](readme_assets/2.png)
 
+## Run With Local Models
+
+This copy of Plant Talk runs on **local models by default** (`AI_PROVIDER=local`
+in `.env`), so there is no API key and no API bill. Camera frames stay on your
+computer.
+
+| Job | Local mode | OpenAI mode (`AI_PROVIDER=openai`) |
+|---|---|---|
+| Camera observations | A vision model in [Ollama](https://ollama.com) or LM Studio (default `qwen2.5vl:7b`) | `gpt-5.4` |
+| Voice conversation | The local chat model, fed live sensor readings every turn | `gpt-realtime-1.5` |
+| Speech to text | A local Whisper server if `LOCAL_STT_BASE_URL` is set, otherwise the browser's built-in recognition | Realtime API |
+| Text to speech | Your operating system's voices (browser `speechSynthesis`) | Realtime API |
+
+Quick start:
+
+```bash
+# 1. Install Ollama from https://ollama.com, then download a vision model
+ollama pull qwen2.5vl:7b        # ~6 GB; use qwen2.5vl:3b on weaker machines
+
+# 2. Set up and run Plant Talk
+npm run setup                   # creates .env and checks that Ollama and the model are ready
+npm install
+npm run dev                     # open http://localhost:3000 in Chrome or Edge
+```
+
+Notes:
+
+- Chrome and Edge run their built-in speech recognition in the cloud. For fully
+  offline speech, run an OpenAI-compatible Whisper server such as
+  [speaches](https://github.com/speaches-ai/speaches) and set
+  `LOCAL_STT_BASE_URL` (for example `http://127.0.0.1:8000/v1`).
+- The plant answers in the language you speak. For Chinese, install a Chinese
+  system voice and keep the voice on **Automatic**, or pick one in the
+  dashboard.
+- Local models don't stream reasoning summaries, so the observation panel shows
+  only the final structured observation.
+- The server only listens on `localhost`. Set `HOST=0.0.0.0` only if you trust
+  everyone on your network, because the API has no login.
+
+Hardware for local mode: a 7B vision model wants a GPU with about 8 GB of VRAM
+(or Apple Silicon with 16 GB of memory). On CPU only, it runs with 16 GB of RAM
+but an observation can take a minute or more; `qwen2.5vl:3b` is faster.
+
 ## How To Use
 
 ### Codex Take the Wheel
@@ -101,7 +144,7 @@ endless, and some starter built-in customization points include:
 ### Do I need an Arduino?
 
 No. You can run Plant Talk with only your computer, webcam, microphone, and
-OpenAI API access. But, the Arduino sensors make the readings far more useful
+either local models or OpenAI API access. But, the Arduino sensors make the readings far more useful
 (otherwise they're based only on what the webcam sees).
 
 ### Why Chrome or Edge?

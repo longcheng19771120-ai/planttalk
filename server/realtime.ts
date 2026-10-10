@@ -8,6 +8,7 @@
 
 import type { Request, Response } from "express";
 import { ensureApiKey, getOpenAI } from "./openai";
+import { getAiProvider } from "./ai-config";
 import {
   CLIENT_SECRET_TTL_SECONDS,
   PLANT_INSTRUCTIONS,
@@ -17,6 +18,10 @@ import {
 } from "../src/lib/plant/realtime-config";
 
 export async function handleRealtimeTokenRequest(req: Request, res: Response) {
+  if (getAiProvider() === "local") {
+    res.status(400).json({ error: "Realtime voice is only used when AI_PROVIDER=openai. Local mode uses /api/chat." });
+    return;
+  }
   if (!ensureApiKey(res)) return;
 
   // The browser may request a voice; resolvePlantVoice validates it against the
