@@ -39,6 +39,18 @@ export const ISSUE_CATEGORY_LABELS: Record<IssueCategory, string> = {
 export const CONFIDENCE_LABELS = { low: "可能", medium: "较可能", high: "很可能" } as const;
 export const SEVERITY_LABELS = { mild: "轻度", moderate: "中度", severe: "重度" } as const;
 
+// Species identification, returned with each photo health check.
+export const CARE_DIFFICULTIES = ["easy", "moderate", "hard"] as const;
+export const CARE_DIFFICULTY_LABELS = { easy: "好养", moderate: "中等", hard: "难养" } as const;
+
+export const LIGHT_NEEDS = ["low", "medium", "bright", "direct"] as const;
+export const LIGHT_NEED_LABELS = {
+  low: "耐阴",
+  medium: "中等散射光",
+  bright: "明亮散射光",
+  direct: "需要直射光",
+} as const;
+
 export interface PlantConditionInfo {
   id: string;
   name: string;

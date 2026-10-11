@@ -11,6 +11,7 @@ import {
   type CareTaskSettings,
   type PlantProfile,
 } from "@/lib/plant/care";
+import type { PlantSpecies } from "@/lib/plant/schemas";
 import { idbStorage } from "@/stores/plant/idb-storage";
 import { usePlantSensorsStore } from "@/stores/plant/sensors-store";
 
@@ -32,12 +33,14 @@ interface PlantCareState {
   snooze: (action: CareAction) => void;
   setTask: (action: CareAction, patch: Partial<{ enabled: boolean; intervalDays: number }>) => void;
   setProfile: (patch: Partial<PlantProfile>) => void;
+  /** Use an identified species' name and typical watering and feeding intervals. */
+  applySpecies: (species: PlantSpecies) => void;
   clearLog: () => void;
 }
 
 export const usePlantCareStore = create<PlantCareState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       tasks: DEFAULT_CARE_TASKS,
       profile: DEFAULT_PLANT_PROFILE,
       log: [],
@@ -75,8 +78,18 @@ export const usePlantCareStore = create<PlantCareState>()(
         set((state) => {
           const profile = { ...state.profile, ...patch };
           profile.ambientTempC = clamp(Number.isFinite(profile.ambientTempC) ? profile.ambientTempC : 22, 0, 45);
+          profile.speciesName = profile.speciesName.slice(0, 100);
           return { profile };
         }),
+
+      applySpecies: (species) => {
+        const { setTask, setProfile } = get();
+        setTask("water", { intervalDays: species.wateringIntervalDays });
+        setTask("fertilize", { intervalDays: species.fertilizeIntervalDays });
+        setProfile({
+          speciesName: species.scientificName ? `${species.commonName}（${species.scientificName}）` : species.commonName,
+        });
+      },
 
       clearLog: () => set({ log: [], snoozes: {} }),
     }),

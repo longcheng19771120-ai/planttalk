@@ -80,11 +80,19 @@ export async function executePlantTool(name: string, argsJson: string): Promise<
             overallHealth: latest.diagnosis.overallHealth,
             score: latest.diagnosis.healthScore,
             summary: latest.diagnosis.summary,
+            species: latest.diagnosis.species
+              ? {
+                  name: latest.diagnosis.species.commonName,
+                  scientificName: latest.diagnosis.species.scientificName,
+                  confidence: latest.diagnosis.species.confidence,
+                }
+              : "Not identified.",
             issues: latest.diagnosis.issues.map((issue, index) => ({
               name: issue.name,
               confidence: issue.confidence,
               severity: issue.severity,
-              treatment: issue.treatment,
+              treatmentSteps: issue.treatmentSteps,
+              stepsDone: latest.completedSteps[index]?.length ?? 0,
               treated: latest.treatedIssues.includes(index),
             })),
           }
