@@ -220,6 +220,92 @@ img {
   margin: 0;
 }
 
+.health-timeline {
+  margin-top: 1rem;
+}
+
+.health-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.health-chart-grid {
+  stroke: var(--pico-muted-border-color);
+  stroke-width: 1;
+}
+
+.health-chart-line {
+  fill: none;
+  stroke: var(--pico-primary);
+  stroke-width: 2;
+}
+
+.health-chart-dot {
+  fill: var(--pico-primary);
+}
+
+.health-chart-dates {
+  display: flex;
+  justify-content: space-between;
+}
+
+.health-photos {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.health-photos figure {
+  flex: 0 0 auto;
+  margin: 0;
+  text-align: center;
+}
+
+.health-photos img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.health-photos figcaption {
+  font-size: 0.75rem;
+}
+
+/* Outdoor weather inside the care panel. */
+.care-weather {
+  margin-bottom: 1rem;
+}
+
+.weather-alerts {
+  margin: 0.4rem 0;
+  padding-left: 0;
+}
+
+.weather-alerts li {
+  list-style: none;
+  margin-bottom: 0.3rem;
+}
+
+.weather-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.weather-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.weather-actions .health-small-button {
+  margin: 0;
+}
+
 .pest-library {
   max-height: 26rem;
   overflow-y: auto;

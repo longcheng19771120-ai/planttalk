@@ -16,6 +16,7 @@ import { usePlantObserverStore } from "@/stores/plant/observer-store";
 import { computeSensorRisks } from "@/stores/plant/plant-context";
 import { selectSensorReadings, usePlantSensorsStore } from "@/stores/plant/sensors-store";
 import { actionGlyph, type ActionStatus } from "@/components/dashboard/action-glyph";
+import { HealthTimeline } from "@/components/dashboard/health-timeline";
 
 const VISIBLE_HISTORY_COUNT = 8;
 
@@ -225,6 +226,8 @@ export function HealthPanel() {
           </p>
         </section>
       )}
+
+      <HealthTimeline diagnoses={diagnoses} />
 
       {diagnoses.length > 1 && (
         <details>

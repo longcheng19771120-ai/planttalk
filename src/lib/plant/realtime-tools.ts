@@ -9,9 +9,11 @@
 import { describeLightReading } from "@/lib/plant/sensors";
 import { CARE_ACTIONS, computeCareStatus } from "@/lib/plant/care";
 import { findCondition } from "@/lib/plant/health";
+import { weatherAlerts } from "@/lib/plant/weather";
 import { usePlantCareStore } from "@/stores/plant/care-store";
 import { selectLatestDiagnosis, usePlantHealthStore } from "@/stores/plant/health-store";
 import { computeSensorRisks } from "@/stores/plant/plant-context";
+import { usePlantWeatherStore } from "@/stores/plant/weather-store";
 import {
   selectHasFreshHardwareReadings,
   selectSensorReadings,
@@ -98,9 +100,24 @@ export async function executePlantTool(name: string, argsJson: string): Promise<
           }
         : "No photo health check yet.";
 
+      const { forecast } = usePlantWeatherStore.getState();
+      const weather =
+        profile.isOutdoor && forecast.length > 0
+          ? {
+              forecast: forecast.map((day) => ({
+                date: day.date,
+                minTempC: Math.round(day.minTempC),
+                maxTempC: Math.round(day.maxTempC),
+                rainMm: Math.round(day.precipitationMm),
+              })),
+              alerts: weatherAlerts(forecast).map((alert) => alert.message),
+            }
+          : undefined;
+
       return JSON.stringify({
         schedule,
         healthCheck,
+        ...(weather ? { weather } : {}),
         sensorRisks: computeSensorRisks(now).map((risk) => ({
           problem: findCondition(risk.conditionId)?.name ?? risk.conditionId,
           level: risk.level,
