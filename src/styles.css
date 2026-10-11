@@ -154,7 +154,7 @@ img {
 }
 
 .care-actions button,
-.health-treat {
+.health-small-button {
   padding: 0.2rem 0.6rem;
   margin: 0 0 0 0.25rem;
   font-size: 0.85rem;
@@ -182,8 +182,42 @@ img {
   overflow: hidden;
 }
 
-.health-issues li {
+.health-issues > li {
   margin-bottom: 0.6rem;
+}
+
+.health-species {
+  margin-bottom: 1rem;
+}
+
+.health-species .health-small-button {
+  margin: 0.4rem 0 0;
+}
+
+.health-steps {
+  margin: 0.2rem 0 0;
+  padding-left: 0;
+}
+
+.health-steps li {
+  margin-bottom: 0.2rem;
+  list-style: none;
+}
+
+.health-steps label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0;
+}
+
+.health-steps label span {
+  font-size: 0.875em;
+}
+
+.health-steps input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .pest-library {

@@ -53,6 +53,8 @@ export const CARE_INTERVAL_LIMITS = { min: 1, max: 730 };
 export type Hemisphere = "north" | "south";
 
 export interface PlantProfile {
+  /** What the plant is, from a health check or typed by the user; empty if unknown. */
+  speciesName: string;
   isOutdoor: boolean;
   /** Typical air temperature around the plant, used by the hydration model. */
   ambientTempC: number;
@@ -60,6 +62,7 @@ export interface PlantProfile {
 }
 
 export const DEFAULT_PLANT_PROFILE: PlantProfile = {
+  speciesName: "",
   isOutdoor: false,
   ambientTempC: 22,
   hemisphere: "north",
@@ -237,6 +240,7 @@ export function summarizeCareForPrompt(
   });
   const lastTreatment = lastDoneAt(log, "treat");
   if (lastTreatment !== null) parts.push(`pest/disease treatment: last ${Math.round((now - lastTreatment) / DAY_MS)}d ago`);
+  if (profile.speciesName.trim()) parts.push(`species: ${profile.speciesName.trim()}`);
   parts.push(`${profile.isOutdoor ? "outdoor" : "indoor"} plant, ~${profile.ambientTempC}°C, ${seasonOf(new Date(now), profile.hemisphere)}`);
   return parts.join("; ");
 }

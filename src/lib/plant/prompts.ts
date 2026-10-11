@@ -91,25 +91,32 @@ const plantConditionReference = PLANT_CONDITIONS.map(
 ).join("; ");
 
 const plantHealthJsonContract = [
-  "Return exactly one JSON object with these keys: overallHealth, healthScore, summary, issues, pestsVisible, isolateFromOtherPlants, careAdvice, followUp.",
+  "Return exactly one JSON object with these keys: species, overallHealth, healthScore, summary, issues, pestsVisible, isolateFromOtherPlants, careAdvice, followUp.",
+  "species is an object with keys commonName, scientificName, confidence, careDifficulty, lightNeed, wateringIntervalDays, fertilizeIntervalDays, careNotes.",
+  "commonName is the plant's common name; scientificName is its Latin name, or an empty string when unsure. confidence is one of: low, medium, high.",
+  "careDifficulty is one of: easy, moderate, hard. lightNeed is one of: low, medium, bright, direct.",
+  "wateringIntervalDays (integer 1 to 60) is the typical days between waterings for this species indoors in spring at about 22°C; fertilizeIntervalDays (integer 7 to 180) is the typical days between feedings in the growing season.",
+  "careNotes is one short care tip for this species, under 120 characters.",
   "overallHealth is one of: excellent, good, fair, poor, critical. healthScore is an integer from 0 (dying) to 100 (thriving) consistent with overallHealth.",
   "summary is one or two sentences under 200 characters.",
-  "issues is an array of 0 to 5 objects, most important first, each with keys category, conditionId, name, confidence, severity, evidence, treatment.",
+  "issues is an array of 0 to 5 objects, most important first, each with keys category, conditionId, name, confidence, severity, evidence, treatmentSteps.",
   "category is one of: pest, disease, watering, nutrient, light, environment, physical.",
   "conditionId is an id from the reference list, or other when nothing in the list fits.",
   "confidence is one of: low, medium, high. severity is one of: mild, moderate, severe.",
-  "evidence (under 160 characters) names the visible signs; treatment (under 200 characters) gives the gentlest effective first step.",
+  "evidence (under 160 characters) names the visible signs.",
+  "treatmentSteps is an ordered array of 1 to 4 concrete steps the user can do and tick off one at a time, gentlest effective step first, each under 100 characters.",
   "pestsVisible is true only when insects, mites, eggs, webbing, or their residue are actually visible.",
   "isolateFromOtherPlants is true when a likely issue spreads to nearby plants.",
   "careAdvice is an array of 1 to 5 practical next steps, each under 120 characters.",
   "followUp says what close-up photo or check would confirm the diagnosis, or is an empty string.",
-  "Write summary, name, evidence, treatment, careAdvice, and followUp in Simplified Chinese; keep keys and enum values in English.",
+  "Write commonName, careNotes, summary, name, evidence, treatmentSteps, careAdvice, and followUp in Simplified Chinese; keep keys and enum values in English.",
   "Do not wrap the JSON in markdown, prose, or code fences. No null values, no extra keys.",
 ].join(" ");
 
 export const PLANT_HEALTH_PROMPTS = {
   system: [
     "You are a careful plant health specialist checking one houseplant photo for pests, diseases, and care problems.",
+    "First identify the plant from its leaves, growth habit, and any flowers; if you are not sure, give the closest likely plant with confidence low.",
     "Look closely at leaf color, spots, edges, undersides if visible, stems, new growth, the soil surface, and anything moving or webbed.",
     "Use the sensor readings and care log as supporting context: wet soil for days supports overwatering or root rot; very dry soil supports underwatering; a missed fertilizing schedule supports nutrient deficiency.",
     "Only report problems that the photo or the context actually supports. A healthy plant should get an empty issues array and a high score.",

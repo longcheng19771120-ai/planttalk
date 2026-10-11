@@ -135,6 +135,17 @@ export function CarePanel() {
         ))}
         <small>浇水间隔按春季、约 22°C 的情况填写，系统会按季节和气温自动调整。</small>
 
+        <label>
+          品种
+          <input
+            type="text"
+            placeholder="例如：绿萝。做一次健康诊断可以自动识别"
+            value={profile.speciesName}
+            maxLength={100}
+            onChange={(event) => setProfile({ speciesName: event.target.value })}
+          />
+        </label>
+
         <fieldset>
           <legend>摆放位置</legend>
           <label>

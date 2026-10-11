@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HEALTH_LEVELS, ISSUE_CATEGORIES, PLANT_CONDITION_IDS } from "./health";
+import { CARE_DIFFICULTIES, HEALTH_LEVELS, ISSUE_CATEGORIES, LIGHT_NEEDS, PLANT_CONDITION_IDS } from "./health";
 
 // Zod schemas for OpenAI structured outputs.
 
@@ -85,10 +85,36 @@ export const plantHealthIssueSchema = z.object({
   confidence: z.enum(["low", "medium", "high"]).describe("How sure the visual evidence makes you."),
   severity: z.enum(["mild", "moderate", "severe"]).describe("How much of the plant is affected and how badly."),
   evidence: z.string().min(4).max(160).describe("The visible signs that point to this problem, in Simplified Chinese."),
-  treatment: z.string().min(4).max(200).describe("What to do first, gentlest option first, in Simplified Chinese."),
+  treatmentSteps: z
+    .array(z.string().min(4).max(100))
+    .min(1)
+    .max(4)
+    .describe("Ordered treatment steps the user can tick off, gentlest first, in Simplified Chinese."),
+});
+
+export const plantSpeciesSchema = z.object({
+  commonName: z.string().min(1).max(40).describe("Common name in Simplified Chinese."),
+  scientificName: z.string().max(60).describe("Latin name, or an empty string when unsure."),
+  confidence: z.enum(["low", "medium", "high"]).describe("How sure the photo makes you of the species."),
+  careDifficulty: z.enum(CARE_DIFFICULTIES),
+  lightNeed: z.enum(LIGHT_NEEDS),
+  wateringIntervalDays: z
+    .number()
+    .int()
+    .min(1)
+    .max(60)
+    .describe("Typical days between waterings indoors in spring at about 22°C."),
+  fertilizeIntervalDays: z
+    .number()
+    .int()
+    .min(7)
+    .max(180)
+    .describe("Typical days between feedings in the growing season."),
+  careNotes: z.string().max(120).describe("One short care tip for this species in Simplified Chinese."),
 });
 
 export const plantHealthDiagnosisSchema = z.object({
+  species: plantSpeciesSchema.describe("Best guess at what plant this is."),
   overallHealth: z.enum(HEALTH_LEVELS).describe("Overall health of the plant in the photo."),
   healthScore: z.number().int().min(0).max(100).describe("0 = dying, 100 = thriving."),
   summary: z.string().min(6).max(200).describe("One or two sentences in Simplified Chinese."),
@@ -112,3 +138,4 @@ export type PlantObserverThought = z.infer<typeof plantObserverThoughtSchema>;
 export type PlantObserverResponse = z.infer<typeof plantObserverResponseSchema>;
 export type PlantHealthIssue = z.infer<typeof plantHealthIssueSchema>;
 export type PlantHealthDiagnosis = z.infer<typeof plantHealthDiagnosisSchema>;
+export type PlantSpecies = z.infer<typeof plantSpeciesSchema>;

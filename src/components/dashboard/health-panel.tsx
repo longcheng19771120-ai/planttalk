@@ -1,13 +1,16 @@
 import { useState } from "react";
 import {
+  CARE_DIFFICULTY_LABELS,
   CONFIDENCE_LABELS,
   HEALTH_LEVEL_ICONS,
   HEALTH_LEVEL_LABELS,
   ISSUE_CATEGORY_LABELS,
+  LIGHT_NEED_LABELS,
   SEVERITY_LABELS,
   findCondition,
 } from "@/lib/plant/health";
 import { captureLiveFrame, usePlantCameraStore } from "@/stores/plant/camera-store";
+import { usePlantCareStore } from "@/stores/plant/care-store";
 import { selectLatestDiagnosis, usePlantHealthStore } from "@/stores/plant/health-store";
 import { usePlantObserverStore } from "@/stores/plant/observer-store";
 import { computeSensorRisks } from "@/stores/plant/plant-context";
@@ -25,7 +28,9 @@ export function HealthPanel() {
   const isSubmitting = usePlantHealthStore((s) => s.isSubmitting);
   const errorMessage = usePlantHealthStore((s) => s.errorMessage);
   const diagnose = usePlantHealthStore((s) => s.diagnose);
-  const markIssueTreated = usePlantHealthStore((s) => s.markIssueTreated);
+  const toggleTreatmentStep = usePlantHealthStore((s) => s.toggleTreatmentStep);
+  const careTasks = usePlantCareStore((s) => s.tasks);
+  const applySpecies = usePlantCareStore((s) => s.applySpecies);
   const clearDiagnoses = usePlantHealthStore((s) => s.clearDiagnoses);
   const cameraStatus = usePlantCameraStore((s) => s.cameraStatus);
   // Subscribed so the sensor risks below recompute when readings or memory change.
@@ -36,6 +41,11 @@ export function HealthPanel() {
 
   const risks = computeSensorRisks();
   const diagnosis = latest?.diagnosis;
+  const species = diagnosis?.species;
+  const speciesApplied =
+    species !== undefined &&
+    careTasks.water.intervalDays === species.wateringIntervalDays &&
+    careTasks.fertilize.intervalDays === species.fertilizeIntervalDays;
   const status: ActionStatus = isSubmitting
     ? "working"
     : diagnosis && (diagnosis.overallHealth === "poor" || diagnosis.overallHealth === "critical")
@@ -121,6 +131,31 @@ export function HealthPanel() {
             {diagnosis.summary}
           </p>
 
+          {species && (
+            <div className="health-species">
+              <strong>🪴 {species.commonName}</strong>
+              {species.scientificName && <em> {species.scientificName}</em>}{" "}
+              <small>
+                （{CONFIDENCE_LABELS[species.confidence]} · {CARE_DIFFICULTY_LABELS[species.careDifficulty]} ·{" "}
+                {LIGHT_NEED_LABELS[species.lightNeed]}）
+              </small>
+              <br />
+              <small>
+                一般每 {species.wateringIntervalDays} 天浇一次水，每 {species.fertilizeIntervalDays} 天施一次肥。
+                {species.careNotes}
+              </small>
+              <br />
+              <button
+                type="button"
+                className="secondary outline health-small-button"
+                disabled={speciesApplied}
+                onClick={() => applySpecies(species)}
+              >
+                {speciesApplied ? "已按这个品种设置养护间隔" : "按这个品种设置浇水和施肥间隔"}
+              </button>
+            </div>
+          )}
+
           {diagnosis.isolateFromOtherPlants && (
             <p>
               <mark>可能会传染，建议先把它和其他植物隔开。</mark>
@@ -145,16 +180,25 @@ export function HealthPanel() {
                     <br />
                     <small>依据：{issue.evidence}</small>
                     <br />
-                    <small>处理：{issue.treatment}</small>
-                    <br />
-                    <button
-                      type="button"
-                      className="secondary outline health-treat"
-                      disabled={treated}
-                      onClick={() => markIssueTreated(latest.id, index)}
-                    >
-                      {treated ? "已记录处理" : "已处理，记入养护日志"}
-                    </button>
+                    <small>
+                      处理步骤
+                      {treated && "（已完成，已记入养护日志）"}：
+                    </small>
+                    <ol className="health-steps">
+                      {issue.treatmentSteps.map((step, stepIndex) => (
+                        <li key={stepIndex}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              disabled={treated}
+                              checked={treated || (latest.completedSteps[index] ?? []).includes(stepIndex)}
+                              onChange={() => toggleTreatmentStep(latest.id, index, stepIndex)}
+                            />
+                            <span>{step}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ol>
                   </li>
                 );
               })}
