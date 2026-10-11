@@ -13,8 +13,12 @@ import {
   seasonOf,
   type CareTaskState,
 } from "@/lib/plant/care";
+import { printCareCard } from "@/lib/plant/care-card";
+import { PLANT_NAME } from "@/lib/plant/realtime-config";
 import { usePlantCareStore } from "@/stores/plant/care-store";
+import { selectLatestDiagnosis, usePlantHealthStore } from "@/stores/plant/health-store";
 import { actionGlyph } from "@/components/dashboard/action-glyph";
+import { WeatherSection } from "@/components/dashboard/weather-section";
 
 const VISIBLE_LOG_COUNT = 12;
 
@@ -40,6 +44,9 @@ export function CarePanel() {
   const setProfile = usePlantCareStore((s) => s.setProfile);
   const removeLogEntry = usePlantCareStore((s) => s.removeLogEntry);
   const clearLog = usePlantCareStore((s) => s.clearLog);
+  const latestDiagnosis = usePlantHealthStore(selectLatestDiagnosis);
+  const [cardNotes, setCardNotes] = useState("");
+  const [cardError, setCardError] = useState<string | null>(null);
 
   // Due dates move with the clock; refresh once a minute.
   const [now, setNow] = useState(() => Date.now());
@@ -54,6 +61,32 @@ export function CarePanel() {
   const needsAttention = statuses.some((status) => status.state === "overdue" || status.state === "due");
   const hydration = estimateHydration(lastDoneAt(log, "water"), tasks.water.intervalDays, profile, now);
   const recentLog = log.slice(-VISIBLE_LOG_COUNT).reverse();
+
+  const printCard = () => {
+    setCardError(null);
+    const openTreatments = (latestDiagnosis?.diagnosis.issues ?? [])
+      .map((issue, index) => ({ issue, index }))
+      .filter(({ index }) => !latestDiagnosis?.treatedIssues.includes(index))
+      .map(({ issue, index }) => ({
+        name: issue.name,
+        steps: issue.treatmentSteps.filter((_, step) => !latestDiagnosis?.completedSteps[index]?.includes(step)),
+      }));
+    try {
+      printCareCard({
+        plantName: PLANT_NAME,
+        speciesName: profile.speciesName,
+        species: latestDiagnosis?.diagnosis.species ?? null,
+        isOutdoor: profile.isOutdoor,
+        statuses,
+        intervals: Object.fromEntries(CARE_ACTIONS.map((action) => [action, tasks[action].intervalDays])),
+        openTreatments,
+        notes: cardNotes,
+        now: Date.now(),
+      });
+    } catch (error) {
+      setCardError(error instanceof Error ? error.message : "无法打开打印窗口");
+    }
+  };
 
   return (
     <article>
@@ -106,6 +139,8 @@ export function CarePanel() {
           </li>
         ))}
       </ul>
+
+      {profile.isOutdoor && <WeatherSection />}
 
       <details>
         <summary>养护设置</summary>
@@ -190,6 +225,26 @@ export function CarePanel() {
             <option value="south">南半球</option>
           </select>
         </label>
+      </details>
+
+      <details>
+        <summary>打印养护卡</summary>
+        <small>出门时交给照看植物的人：包含养护间隔、上次和下次的时间、还没做完的处理步骤，以及空白的照看记录表。在打印窗口里可以选“存储为 PDF”。</small>
+        <textarea
+          rows={3}
+          placeholder="给照看的人留言，例如：浇水用窗台上的水壶，水要浇到盆底流出来。"
+          value={cardNotes}
+          maxLength={500}
+          onChange={(event) => setCardNotes(event.target.value)}
+        />
+        <button type="button" className="secondary" onClick={printCard}>
+          打印养护卡
+        </button>
+        {cardError && (
+          <p>
+            <mark>{cardError}</mark>
+          </p>
+        )}
       </details>
 
       <details>
