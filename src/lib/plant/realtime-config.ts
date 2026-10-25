@@ -131,7 +131,7 @@ export const PLANT_TOOLS = [
   {
     type: "function",
     name: "get_care_and_health",
-    description: `Check ${PLANT_NAME}'s care schedule (last and next watering, fertilizing, misting, leaf cleaning, repotting) and health: the latest photo health check for pests, diseases and care problems, plus sensor-based risk warnings.`,
+    description: `Check ${PLANT_NAME}'s care schedule (last and next watering, fertilizing, misting, leaf cleaning, repotting) and health: the latest photo health check for pests, diseases and care problems, plus sensor-based risk warnings and, for outdoor plants, the weather forecast and frost, heat or heavy-rain alerts.`,
     parameters: { type: "object", properties: {}, required: [] },
   },
 ] as const;
